@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import type { LegalResponse, Language } from '@/lib/types'
-import { answerLegalQueryWithRag } from '@/lib/rag-openai'
 
 interface ChatRequest {
   query: string
@@ -33,6 +32,12 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
         { status: 400 },
       )
     }
+
+    // Use OpenAI-backed RAG when an API key is present, otherwise fall back to
+    // the lightweight TF-IDF implementation so the app works without credentials.
+    const { answerLegalQueryWithRag } = process.env.OPENAI_API_KEY
+      ? await import('@/lib/rag-openai')
+      : await import('@/lib/rag')
 
     const data = await answerLegalQueryWithRag({
       query: body.query,
