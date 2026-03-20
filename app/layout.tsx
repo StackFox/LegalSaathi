@@ -5,6 +5,7 @@ import { ClerkProvider } from '@clerk/nextjs'
 import { LanguageProvider } from '@/lib/language-context'
 import { AuthProvider } from '@/lib/auth-context'
 import { ThemeProvider } from '@/components/theme-provider'
+import { Toaster } from '@/components/ui/sonner'
 import './globals.css'
 
 const inter = Inter({ 
@@ -78,6 +79,7 @@ export default function RootLayout({
             <LanguageProvider>
               <AuthProvider>
                 {children}
+                <Toaster richColors position="top-right" />
               </AuthProvider>
             </LanguageProvider>
           </ThemeProvider>

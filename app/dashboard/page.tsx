@@ -10,7 +10,8 @@ import {
   Filter,
   UserPlus,
   ShieldX,
-  LogIn
+  LogIn,
+  FileText
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -33,6 +34,7 @@ import {
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { LegalDomainBadge } from '@/components/legal-domain-badge'
+import { DocumentUpload } from '@/components/document-upload'
 import { useLanguage } from '@/lib/language-context'
 import { useAuth } from '@/lib/auth-context'
 import { mockDashboardStats, mockQueryRecords, mockDomainDistribution } from '@/lib/mock-data'
@@ -349,12 +351,15 @@ export default function DashboardPage() {
                       </div>
                     ))}
                   </div>
-                </CardContent>
+              </CardContent>
               </Card>
+
+              {/* Document Upload */}
+              <DocumentUpload />
+              </div>
             </div>
           </div>
-        </div>
-      </main>
+        </main>
 
       <Footer />
     </div>

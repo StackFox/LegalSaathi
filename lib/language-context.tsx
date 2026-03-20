@@ -84,7 +84,7 @@ export const translations: Translations = {
   'footer.disclaimer.title': { en: 'Important Disclaimer', hi: 'महत्वपूर्ण अस्वीकरण' },
   'footer.disclaimer.text': { 
     en: 'Legal Saathi provides general legal information and guidance only. This service is not a substitute for professional legal advice from a qualified lawyer. For specific legal matters, please consult a licensed legal professional. We are not responsible for any actions taken based on this information.',
-    hi: 'लीगल साथी केवल सामान्य कानूनी जानकारी और मार्गदर्शन प्रदान करता है। यह सेवा किसी योग्य वकील से पेशेवर कानूनी सलाह का विकल्प नहीं है। विशिष्ट कानूनी मामलों के लिए, कृपया लाइसेंस प्राप्त कानूनी पेशेवर से परामर्श करें।'
+    hi: 'लीगल साथी केवल सामान्य कानूनी जानकारी और मार्गदर्शन प्रदान करता है। यह सेवा किसी योग्य वकील से पेशेवर कानूनी सलाह का विकल्प नहीं है। विशिष्ट कानूनी मामलों के लिए, कृपया लाइसे��स प्राप्त कानूनी पेशेवर से परामर्श करें।'
   },
   'footer.brand': { en: 'Free legal guidance for all. Empowering citizens with legal knowledge.', hi: 'सभी के लिए मुफ्त कानूनी मार्गदर्शन। नागरिकों को कानूनी ज्ञान से सशक्त बनाना।' },
   'footer.quickLinks': { en: 'Quick Links', hi: 'त्वरित लिंक' },
@@ -124,6 +124,8 @@ export const translations: Translations = {
   'auth.description': { en: 'Sign in to save your queries and access personalized features', hi: 'अपने प्रश्न सहेजने और व्यक्तिगत सुविधाओं तक पहुंचने के लिए साइन इन करें' },
   'auth.signIn': { en: 'Sign In', hi: 'साइन इन' },
   'auth.signInWithGoogle': { en: 'Sign in with Google', hi: 'Google से साइन इन करें' },
+  'auth.signUpWithGoogle': { en: 'Sign up with Google', hi: 'Google से साइन अप करें' },
+  'auth.or': { en: 'or continue with email', hi: 'या ईमेल से जारी रखें' },
   'auth.signUp': { en: 'Sign Up', hi: 'साइन अप' },
   'auth.signOut': { en: 'Sign Out', hi: 'साइन आउट' },
   'auth.email': { en: 'Email', hi: 'ईमेल' },
@@ -136,6 +138,10 @@ export const translations: Translations = {
   'auth.demoCredentials': { en: 'Demo credentials', hi: 'डेमो क्रेडेंशियल्स' },
   'auth.myQueries': { en: 'My Queries', hi: 'मेरे प्रश्न' },
   'auth.profile': { en: 'Profile', hi: 'प्रोफ़ाइल' },
+  
+  // Documents
+  'documents.uploadTitle': { en: 'Upload Document', hi: 'दस्तावेज़ अपलोड करें' },
+  'documents.uploadDescription': { en: 'Upload legal documents to enhance the knowledge base', hi: 'ज्ञान आधार को बेहतर बनाने के लिए कानूनी दस्तावेज़ अपलोड करें' },
 }
 
 interface LanguageContextType {

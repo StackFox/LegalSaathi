@@ -141,11 +141,26 @@ export default function AuthModal({ open, onOpenChange, defaultMode = 'signin' }
               onClick={handleGoogleSignIn}
               disabled={isLoading || isGoogleLoading}
             >
-              <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-xs font-bold">
-                G
-              </span>
+              {isGoogleLoading ? (
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              ) : (
+                <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-xs font-bold">
+                  G
+                </span>
+              )}
               {t('auth.signInWithGoogle')}
             </Button>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  {t('auth.or') || 'or'}
+                </span>
+              </div>
+            </div>
 
             <form onSubmit={handleSignIn} className="space-y-4">
               <div className="space-y-2">
@@ -216,6 +231,34 @@ export default function AuthModal({ open, onOpenChange, defaultMode = 'signin' }
           
           {/* Sign Up Tab */}
           <TabsContent value="signup" className="space-y-4 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleGoogleSignIn}
+              disabled={isLoading || isGoogleLoading}
+            >
+              {isGoogleLoading ? (
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              ) : (
+                <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-xs font-bold">
+                  G
+                </span>
+              )}
+              {t('auth.signUpWithGoogle')}
+            </Button>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  {t('auth.or') || 'or'}
+                </span>
+              </div>
+            </div>
+
             <form onSubmit={handleSignUp} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="signup-name" className="text-foreground">{t('auth.name')}</Label>
