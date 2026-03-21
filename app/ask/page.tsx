@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, Suspense, useRef } from 'react'
+import { useState, useEffect, Suspense, useRef, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Send, Clock, AlertTriangle, CheckCircle, ListOrdered } from 'lucide-react'
+import { Send, Clock, AlertTriangle, CheckCircle, ListOrdered, Scale, MessageSquare, BookOpen, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
@@ -13,9 +13,8 @@ import { ConfidenceMeter } from '@/components/confidence-meter'
 import { StatuteCard } from '@/components/statute-card'
 import { EscalationBanner } from '@/components/escalation-banner'
 import { AuditTrail } from '@/components/audit-trail'
-import { QueryProcessor } from '@/components/query-processor'
 import { useLanguage } from '@/lib/language-context'
-import { mockResponses, languageOptions, topicChips } from '@/lib/mock-data'
+import { languageOptions, topicChips } from '@/lib/mock-data'
 import type { LegalResponse, Language as LangType } from '@/lib/types'
 
 function AskPageContent() {
@@ -24,63 +23,26 @@ function AskPageContent() {
   const [query, setQuery] = useState('')
   const [selectedLang, setSelectedLang] = useState<LangType>(uiLanguage as LangType)
   const [isProcessing, setIsProcessing] = useState(false)
-  const [processingStep, setProcessingStep] = useState(0)
   const [response, setResponse] = useState<LegalResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [hasSubmitted, setHasSubmitted] = useState(false)
+  const initialQueryHandled = useRef(false)
 
-  const [messages, setMessages] = useState<Array<{ id: string; role: 'user' | 'assistant'; content: string }>>([])
-  const threadRef = useRef<HTMLDivElement | null>(null)
-
-  // Handle initial query from URL params
-  useEffect(() => {
-    const q = searchParams.get('q')
-    const topic = searchParams.get('topic')
-    
-    if (q) {
-      setQuery(q)
-      handleSubmitQuery(q)
-    } else if (topic && mockResponses[topic]) {
-      const topicResponse = mockResponses[topic]
-      const exampleText = uiLanguage === 'hi' ? topicResponse.query : topicResponse.translated_query
-      setQuery(exampleText)
-      handleSubmitQuery(exampleText)
-    }
-  }, [searchParams]) // eslint-disable-line react-hooks/exhaustive-deps
+  const chatRef = useRef<HTMLDivElement | null>(null)
 
   // Keep selector aligned with UI language for initial state changes
   useEffect(() => {
     setSelectedLang(uiLanguage as LangType)
   }, [uiLanguage])
 
-  useEffect(() => {
-    const el = threadRef.current
-    if (!el) return
-    el.scrollTop = el.scrollHeight
-  }, [messages.length, isProcessing])
-
-  const handleSubmitQuery = async (queryText?: string) => {
+  const handleSubmitQuery = useCallback(async (queryText?: string) => {
     const actualQuery = queryText || query
     if (!actualQuery.trim()) return
 
     setIsProcessing(true)
-    setProcessingStep(0)
     setResponse(null)
     setError(null)
-
-    const userMsg = {
-      id: `u-${Date.now()}`,
-      role: 'user' as const,
-      content: actualQuery,
-    }
-    setMessages((prev) => [...prev, userMsg])
-
-    // Update processing steps while the API is running
-    const stepsPromise = (async () => {
-      for (let i = 0; i <= 3; i++) {
-        await new Promise((resolve) => setTimeout(resolve, 350))
-        setProcessingStep(i)
-      }
-    })()
+    setHasSubmitted(true)
 
     try {
       const res = await fetch('/api/chat', {
@@ -94,7 +56,6 @@ function AskPageContent() {
       })
 
       const json = await res.json()
-      await stepsPromise
 
       if (!json?.success || !json?.data) {
         throw new Error(json?.error?.message || 'Request failed')
@@ -102,32 +63,59 @@ function AskPageContent() {
 
       const data: LegalResponse = json.data
       setResponse(data)
-
-      const sources = data.cited_sections
-        .slice(0, 2)
-        .map((s) => `${s.act} ${s.section}`.trim())
-        .join(', ')
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `a-${Date.now()}`,
-          role: 'assistant',
-          content: `Domain: ${data.domain}\nConfidence: ${data.confidence_score}%\n\n${data.action_steps[0] ? `Top guidance: ${data.action_steps[0]}` : ''}${sources ? `\n\nSources: ${sources}` : ''}`.trim(),
-        },
-      ])
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Something went wrong'
       setError(msg)
     } finally {
       setIsProcessing(false)
     }
-  }
+  }, [query, selectedLang])
+
+  // Handle initial query from URL params (only once)
+  useEffect(() => {
+    if (initialQueryHandled.current) return
+    
+    const q = searchParams.get('q')
+    if (q) {
+      initialQueryHandled.current = true
+      setQuery(q)
+      handleSubmitQuery(q)
+    }
+  }, [searchParams, handleSubmitQuery])
 
   const handleTopicClick = (topicId: string) => {
-    const topicResponse = mockResponses[topicId]
-    if (!topicResponse) return
-    const exampleText = selectedLang === 'hi' ? topicResponse.query : topicResponse.translated_query
+    // Use predefined example queries for topics
+    const topicQueries: Record<string, { en: string; hi: string }> = {
+      'tenant-rights': {
+        en: 'My landlord is not returning my security deposit',
+        hi: 'मेरा मकान मालिक मेरी सिक्योरिटी डिपॉजिट वापस नहीं कर रहा'
+      },
+      'police-fir': {
+        en: 'Police is refusing to register my FIR',
+        hi: 'पुलिस मेरी FIR दर्ज नहीं कर रही है'
+      },
+      'rti-filing': {
+        en: 'How to file RTI application in government office',
+        hi: 'सरकारी कार्यालय में RTI कैसे दाखिल करें'
+      },
+      'workplace-harassment': {
+        en: 'I am facing harassment at my workplace',
+        hi: 'मुझे कार्यस्थल पर उत्पीड़न का सामना करना पड़ रहा है'
+      },
+      'consumer-complaint': {
+        en: 'I received a defective product and seller is not responding',
+        hi: 'मुझे खराब प्रोडक्ट मिला और विक्रेता जवाब नहीं दे रहा'
+      },
+      'domestic-violence': {
+        en: 'I need help regarding domestic violence protection',
+        hi: 'मुझे घरेलू हिंसा से सुरक्षा के लिए मदद चाहिए'
+      }
+    }
+    
+    const topicQuery = topicQueries[topicId]
+    if (!topicQuery) return
+    
+    const exampleText = selectedLang === 'hi' ? topicQuery.hi : topicQuery.en
     setQuery(exampleText)
     handleSubmitQuery(exampleText)
   }
@@ -136,23 +124,39 @@ function AskPageContent() {
     <div className="flex min-h-screen flex-col">
       <Header />
       
-      <main className="flex-1">
+      <main className="flex-1 bg-muted/30">
         <div className="container mx-auto px-4 py-6">
-          <div className="grid gap-6 lg:grid-cols-[400px,1fr] xl:grid-cols-[450px,1fr]">
-            {/* Left Panel - Input */}
-            <div className="space-y-6">
-              {/* Language Selector */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">{t('ask.selectLanguage')}</CardTitle>
+          {/* Page Title */}
+          <div className="mb-6 text-center">
+            <h1 className="text-2xl font-bold text-foreground flex items-center justify-center gap-2">
+              <Scale className="h-6 w-6 text-primary" />
+              {t('nav.ask')}
+            </h1>
+            <p className="mt-1 text-muted-foreground">
+              {t('ask.emptyDescription')}
+            </p>
+          </div>
+
+          {/* Main Grid - Split Layout */}
+          <div className="grid gap-6 lg:grid-cols-2">
+            
+            {/* LEFT PANEL - Chat Interface */}
+            <div className="space-y-4">
+              <Card className="h-full flex flex-col">
+                <CardHeader className="pb-3 border-b">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5 text-primary" />
+                    {t('ask.yourQuestion')}
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex-1 flex flex-col p-4 space-y-4">
+                  {/* Language Selector */}
                   <div className="flex flex-wrap gap-2">
                     {languageOptions.map((lang) => (
                       <button
                         key={lang.code}
                         onClick={() => setSelectedLang(lang.code as LangType)}
-                        className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                        className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                           selectedLang === lang.code
                             ? 'bg-primary text-primary-foreground'
                             : 'bg-muted text-muted-foreground hover:bg-muted/80'
@@ -162,172 +166,203 @@ function AskPageContent() {
                       </button>
                     ))}
                   </div>
-                </CardContent>
-              </Card>
 
-              {/* Query Input */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">{t('ask.yourQuestion')}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+                  {/* Query Input */}
                   <Textarea
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder={t('ask.placeholder')}
-                    className="min-h-[120px] resize-none text-base"
+                    className="min-h-[100px] resize-none text-base flex-shrink-0"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault()
+                        handleSubmitQuery()
+                      }
+                    }}
                   />
+                  
                   <Button 
-                  onClick={() => handleSubmitQuery()}
+                    onClick={() => handleSubmitQuery()}
                     disabled={!query.trim() || isProcessing}
-                    className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
+                    className="w-full bg-primary hover:bg-primary/90"
                   >
-                    <Send className="mr-2 h-4 w-4" />
-                    {t('ask.submit')}
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="mr-2 h-4 w-4" />
+                        {t('ask.submit')}
+                      </>
+                    )}
                   </Button>
-                {error && (
-                  <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                    {error}
+
+                  {error && (
+                    <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                      {error}
+                    </div>
+                  )}
+
+                  {/* Quick Topics */}
+                  <div className="pt-2 border-t">
+                    <p className="text-xs text-muted-foreground mb-2">{t('ask.quickTopics')}</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {topicChips.map((chip) => (
+                        <button
+                          key={chip.id}
+                          onClick={() => handleTopicClick(chip.id)}
+                          disabled={isProcessing}
+                          className="rounded-full border bg-background px-2.5 py-1 text-xs text-foreground transition-colors hover:bg-muted disabled:opacity-50"
+                        >
+                          {selectedLang === 'hi' ? chip.labelHi : chip.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                )}
-                </CardContent>
-              </Card>
 
-              {/* Topic Chips */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">{t('ask.quickTopics')}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-2">
-                    {topicChips.map((chip) => (
-                      <button
-                        key={chip.id}
-                        onClick={() => handleTopicClick(chip.id)}
-                        className="rounded-full border bg-card px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-muted"
-                      >
-                        {selectedLang === 'hi' ? chip.labelHi : chip.label}
-                      </button>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Confidence Meter - shown after response */}
-              {response && (
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base">{t('ask.confidence')}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex justify-center">
-                    <ConfidenceMeter score={response.confidence_score} size="lg" />
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Escalation Banner */}
-              {response && response.confidence_score < 60 && (
-                <EscalationBanner
-                  onFindClinic={() => alert('Opening legal aid clinic finder...')}
-                  onRequestCallback={() => alert('Callback request submitted!')}
-                />
-              )}
-            </div>
-
-            {/* Right Panel - Response */}
-            <div className="space-y-6">
-              <Card className="overflow-hidden">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">{t('nav.ask')}</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div
-                    ref={threadRef}
-                    className="max-h-[340px] space-y-3 overflow-y-auto pr-2"
-                  >
-                    {messages.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-10 text-center">
+                  {/* Response Summary in Chat */}
+                  <div ref={chatRef} className="flex-1 min-h-[200px] max-h-[300px] overflow-y-auto space-y-3 pt-2 border-t">
+                    {!hasSubmitted && !isProcessing && (
+                      <div className="flex flex-col items-center justify-center h-full py-8 text-center">
                         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
                           <Send className="h-6 w-6 text-muted-foreground" />
                         </div>
-                        <p className="mt-4 text-sm text-muted-foreground">
-                          {t('ask.emptyDescription')}
+                        <p className="mt-3 text-sm text-muted-foreground">
+                          Ask any legal question in your language
                         </p>
                       </div>
-                    ) : (
-                      messages.map((m) => (
-                        <div
-                          key={m.id}
-                          className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                        >
-                          <div
-                            className={`w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-line ${
-                              m.role === 'user'
-                                ? 'bg-primary/10 text-foreground border border-primary/20'
-                                : 'bg-muted/50 text-foreground border border-border'
-                            }`}
-                          >
-                            {m.content}
+                    )}
+
+                    {isProcessing && (
+                      <div className="flex flex-col items-center justify-center h-full py-8">
+                        <div className="relative">
+                          <div className="h-16 w-16 rounded-full border-4 border-muted animate-pulse" />
+                          <Loader2 className="absolute inset-0 m-auto h-8 w-8 text-primary animate-spin" />
+                        </div>
+                        <p className="mt-4 text-sm font-medium text-foreground">Analyzing your query...</p>
+                        <p className="mt-1 text-xs text-muted-foreground">Searching legal database</p>
+                      </div>
+                    )}
+
+                    {response && !isProcessing && (
+                      <div className="space-y-3">
+                        {/* User Query */}
+                        <div className="flex justify-end">
+                          <div className="max-w-[85%] rounded-2xl px-4 py-2 text-sm bg-primary/10 border border-primary/20">
+                            {query}
                           </div>
                         </div>
-                      ))
+                        
+                        {/* AI Response Summary */}
+                        <div className="flex justify-start">
+                          <div className="max-w-[85%] rounded-2xl px-4 py-3 text-sm bg-muted/50 border">
+                            <div className="flex items-center gap-2 mb-2">
+                              <LegalDomainBadge domain={response.domain} size="sm" />
+                              <span className="text-xs text-muted-foreground">
+                                {response.confidence_score}% confidence
+                              </span>
+                            </div>
+                            <p className="text-foreground leading-relaxed">
+                              {response.action_steps[0]}
+                            </p>
+                            <p className="mt-2 text-xs text-muted-foreground">
+                              See detailed guidance in the panel →
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </CardContent>
               </Card>
+            </div>
 
-              {/* Processing State */}
+            {/* RIGHT PANEL - Legal Guidance */}
+            <div className="space-y-4">
+              {/* Loading State */}
               {isProcessing && (
-                <Card>
-                  <CardContent className="py-8">
-                    <QueryProcessor currentStep={processingStep} />
+                <Card className="border-primary/20">
+                  <CardContent className="py-12">
+                    <div className="flex flex-col items-center text-center">
+                      <div className="relative mb-4">
+                        <Scale className="h-12 w-12 text-primary/20" />
+                        <Loader2 className="absolute inset-0 m-auto h-6 w-6 text-primary animate-spin" />
+                      </div>
+                      <h3 className="text-lg font-semibold">Searching Legal Database</h3>
+                      <div className="mt-4 space-y-2 text-sm text-muted-foreground">
+                        <p className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          Analyzing your question
+                        </p>
+                        <p className="flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Searching Indian legal statutes
+                        </p>
+                        <p className="flex items-center gap-2 opacity-50">
+                          <Clock className="h-4 w-4" />
+                          Generating guidance
+                        </p>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               )}
 
-              {/* Response Card */}
+              {/* Empty State */}
+              {!response && !isProcessing && (
+                <Card className="border-dashed h-full min-h-[400px]">
+                  <CardContent className="flex flex-col items-center justify-center h-full py-16 text-center">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                      <BookOpen className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="mt-4 text-lg font-semibold text-foreground">
+                      Legal Guidance
+                    </h3>
+                    <p className="mt-2 max-w-sm text-muted-foreground leading-relaxed">
+                      Relevant laws, action steps, and deadlines will appear here after you submit your question.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Response Content */}
               {response && !isProcessing && (
-                <>
-                  {/* Header with Domain Badge */}
+                <div className="space-y-4">
+                  {/* Confidence & Domain */}
                   <Card>
                     <CardContent className="py-4">
-                      <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div className="flex items-center justify-between flex-wrap gap-4">
                         <div className="flex items-center gap-3">
                           <LegalDomainBadge domain={response.domain} size="lg" />
-                          <span className="text-sm text-muted-foreground">
-                            {response.detected_language} Query
-                          </span>
+                          <div>
+                            <p className="text-sm font-medium">{response.domain}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {response.detected_language} Query
+                            </p>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Clock className="h-4 w-4" />
-                          <span>Just now</span>
-                        </div>
+                        <ConfidenceMeter score={response.confidence_score} size="md" />
                       </div>
                     </CardContent>
                   </Card>
 
-                  {/* Plain Language Summary */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-lg">
-                        <CheckCircle className="h-5 w-5 text-green-600" />
-                        {t('ask.summary')}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-lg font-medium text-foreground">
-                        {response.translated_query}
-                      </p>
-                      <p className="mt-2 text-muted-foreground">
-                        {selectedLang === 'hi' ? response.query : response.translated_query}
-                      </p>
-                    </CardContent>
-                  </Card>
+                  {/* Escalation Banner for low confidence */}
+                  {response.confidence_score < 60 && (
+                    <EscalationBanner
+                      onFindClinic={() => alert('Opening legal aid clinic finder...')}
+                      onRequestCallback={() => alert('Callback request submitted!')}
+                    />
+                  )}
 
                   {/* Relevant Laws */}
                   <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">{t('ask.relevantLaws')}</CardTitle>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <BookOpen className="h-4 w-4 text-primary" />
+                        {t('ask.relevantLaws')}
+                      </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
                       {response.cited_sections.map((section, idx) => (
@@ -338,9 +373,9 @@ function AskPageContent() {
 
                   {/* Action Steps */}
                   <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-lg">
-                        <ListOrdered className="h-5 w-5 text-primary" />
+                    <CardHeader className="pb-2">
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <ListOrdered className="h-4 w-4 text-primary" />
                         {t('ask.actions')}
                       </CardTitle>
                     </CardHeader>
@@ -351,26 +386,26 @@ function AskPageContent() {
                             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                               {idx + 1}
                             </span>
-                            <span className="text-foreground leading-relaxed">{step}</span>
+                            <span className="text-sm text-foreground leading-relaxed">{step}</span>
                           </li>
                         ))}
                       </ol>
                     </CardContent>
                   </Card>
 
-                  {/* Important Deadlines */}
-                  {response.deadlines.length > 0 && (
+                  {/* Deadlines */}
+                  {response.deadlines && response.deadlines.length > 0 && (
                     <Card className="border-warning/50 bg-warning/5">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-warning text-lg">
-                          <AlertTriangle className="h-5 w-5" />
+                      <CardHeader className="pb-2">
+                        <CardTitle className="flex items-center gap-2 text-warning text-base">
+                          <AlertTriangle className="h-4 w-4" />
                           {t('ask.deadlines')}
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
                         <ul className="space-y-2">
                           {response.deadlines.map((deadline, idx) => (
-                            <li key={idx} className="flex items-start gap-2">
+                            <li key={idx} className="flex items-start gap-2 text-sm">
                               <Clock className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
                               <span className="text-foreground">{deadline}</span>
                             </li>
@@ -381,27 +416,12 @@ function AskPageContent() {
                   )}
 
                   {/* Audit Trail */}
-                  <Card className="overflow-hidden">
-                    <AuditTrail logs={response.audit_log} />
-                  </Card>
-                </>
-              )}
-
-              {/* Empty State */}
-              {!response && !isProcessing && (
-                <Card className="border-dashed">
-                  <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-                      <Send className="h-8 w-8 text-muted-foreground" />
-                    </div>
-                    <h3 className="mt-4 text-lg font-semibold text-foreground">
-                      {t('ask.emptyTitle')}
-                    </h3>
-                    <p className="mt-2 max-w-sm text-muted-foreground leading-relaxed">
-                      {t('ask.emptyDescription')}
-                    </p>
-                  </CardContent>
-                </Card>
+                  {response.audit_log && response.audit_log.length > 0 && (
+                    <Card className="overflow-hidden">
+                      <AuditTrail logs={response.audit_log} />
+                    </Card>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -418,7 +438,7 @@ export default function AskPage() {
     <Suspense fallback={
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto" />
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
           <p className="mt-4 text-muted-foreground">Loading...</p>
         </div>
       </div>

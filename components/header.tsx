@@ -12,12 +12,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useState, useEffect } from 'react'
 import { useTheme } from 'next-themes'
 import { useLanguage } from '@/lib/language-context'
 import { useAuth } from '@/lib/auth-context'
-import { GoogleSignInButton } from '@/components/google-signin-button'
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false)
@@ -40,12 +39,20 @@ export function Header() {
 
   return (
     <>
+      {/* Skip to main content link for accessibility */}
+      <a 
+        href="#main-content" 
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:outline-none"
+      >
+        Skip to main content
+      </a>
+      
       <header className="sticky top-0 z-50 w-full border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-              <Scale className="h-6 w-6 text-primary-foreground" />
+              <Scale className="h-6 w-6 text-primary-foreground" aria-hidden="true" />
             </div>
             <div className="flex flex-col hidden sm:block">
               <span className="text-lg font-bold text-foreground">{t('header.title')}</span>
@@ -54,12 +61,12 @@ export function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden items-center gap-6 lg:flex">
+          <nav className="hidden items-center gap-6 lg:flex" aria-label="Main navigation">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-sm px-1"
               >
                 {link.label}
               </Link>
@@ -67,7 +74,7 @@ export function Header() {
             {isAuthenticated && (
               <Link
                 href="/queries"
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-sm px-1"
               >
                 {t('nav.myQueries')}
               </Link>
@@ -82,10 +89,10 @@ export function Header() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="hidden sm:flex items-center gap-1 px-2"
-                  aria-label={t('accessibility.language')}
+                  className="hidden sm:flex items-center gap-1 px-2 min-h-[44px] min-w-[44px]"
+                  aria-label={`${t('accessibility.language')}: ${language === 'en' ? 'English' : 'हिंदी'}`}
                 >
-                  <Globe className="h-4 w-4" />
+                  <Globe className="h-4 w-4" aria-hidden="true" />
                   <span className="text-xs uppercase">{language}</span>
                 </Button>
               </DropdownMenuTrigger>
@@ -105,10 +112,10 @@ export function Header() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="hidden sm:flex items-center gap-1 px-2"
-                  aria-label={t('accessibility.fontSize')}
+                  className="hidden sm:flex items-center gap-1 px-2 min-h-[44px] min-w-[44px]"
+                  aria-label={`${t('accessibility.fontSize')}: ${fontSize}`}
                 >
-                  <Type className="h-4 w-4" />
+                  <Type className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -116,10 +123,10 @@ export function Header() {
                   Normal {fontSize === 'normal' && '✓'}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setFontSize('large')}>
-                  Large {fontSize === 'large' && '✓'}
+                  Large (बड़ा) {fontSize === 'large' && '✓'}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setFontSize('xlarge')}>
-                  Extra Large {fontSize === 'xlarge' && '✓'}
+                  Extra Large (बहुत बड़ा) {fontSize === 'xlarge' && '✓'}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -129,31 +136,32 @@ export function Header() {
               variant="ghost"
               size="sm"
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              aria-label={t('accessibility.theme')}
+              aria-label={theme === 'dark' ? t('accessibility.lightMode') : t('accessibility.darkMode')}
+              className="min-h-[44px] min-w-[44px]"
             >
               {theme === 'dark' ? (
-                <Sun className="h-4 w-4" />
+                <Sun className="h-4 w-4" aria-hidden="true" />
               ) : (
-                <Moon className="h-4 w-4" />
+                <Moon className="h-4 w-4" aria-hidden="true" />
               )}
             </Button>
 
             {/* Authentication */}
             {!isAuthenticated ? (
               <div className="hidden sm:flex items-center gap-2">
-                <GoogleSignInButton />
-                <Button asChild size="sm" variant="outline">
+                <Button asChild size="sm" variant="outline" className="min-h-[44px]">
                   <Link href="/sign-in">{t('auth.signIn')}</Link>
                 </Button>
-                <Button asChild size="sm" className="bg-primary hover:bg-primary/90">
+                <Button asChild size="sm" className="bg-primary hover:bg-primary/90 min-h-[44px]">
                   <Link href="/sign-up">{t('auth.signUp')}</Link>
                 </Button>
               </div>
             ) : (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="pl-2 pr-1">
+                  <Button variant="ghost" size="sm" className="pl-2 pr-1 min-h-[44px]" aria-label="User menu">
                     <Avatar className="h-8 w-8">
+                      {user?.avatar && <AvatarImage src={user.avatar} alt={user.name || 'User'} />}
                       <AvatarFallback className="text-xs">
                         {user?.name?.charAt(0) || 'U'}
                       </AvatarFallback>
@@ -168,7 +176,7 @@ export function Header() {
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={signOut} className="text-destructive cursor-pointer">
-                    <LogOut className="h-4 w-4 mr-2" />
+                    <LogOut className="h-4 w-4 mr-2" aria-hidden="true" />
                     {t('auth.signOut')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -178,8 +186,8 @@ export function Header() {
             {/* Mobile Menu */}
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="sm" className="lg:hidden">
-                  <Menu className="h-5 w-5" />
+                <Button variant="ghost" size="sm" className="lg:hidden min-h-[44px] min-w-[44px]" aria-label="Open menu">
+                  <Menu className="h-5 w-5" aria-hidden="true" />
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-full sm:w-96">
@@ -188,7 +196,7 @@ export function Header() {
                     <Link
                       key={link.href}
                       href={link.href}
-                      className="block py-2 text-foreground hover:text-primary transition-colors"
+                      className="block py-3 text-lg text-foreground hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-ring rounded-md px-2"
                       onClick={() => setIsOpen(false)}
                     >
                       {link.label}
@@ -197,72 +205,83 @@ export function Header() {
                   {isAuthenticated && (
                     <Link
                       href="/queries"
-                      className="block py-2 text-foreground hover:text-primary transition-colors"
+                      className="block py-3 text-lg text-foreground hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-ring rounded-md px-2"
                       onClick={() => setIsOpen(false)}
                     >
                       {t('nav.myQueries')}
                     </Link>
                   )}
                   <div className="border-t pt-4">
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       <div>
-                        <p className="text-xs font-semibold text-muted-foreground mb-2">Language</p>
+                        <p className="text-sm font-semibold text-muted-foreground mb-3">Language / भाषा</p>
                         <div className="flex gap-2">
                           <Button
                             variant={language === 'en' ? 'default' : 'outline'}
-                            size="sm"
+                            size="lg"
                             onClick={() => setLanguage('en')}
+                            className="min-h-[48px] min-w-[80px] text-base"
                           >
-                            EN
+                            English
                           </Button>
                           <Button
                             variant={language === 'hi' ? 'default' : 'outline'}
-                            size="sm"
+                            size="lg"
                             onClick={() => setLanguage('hi')}
+                            className="min-h-[48px] min-w-[80px] text-base"
                           >
-                            HI
+                            हिंदी
                           </Button>
                         </div>
                       </div>
                       <div>
-                        <p className="text-xs font-semibold text-muted-foreground mb-2">Font Size</p>
-                        <div className="flex gap-2">
+                        <p className="text-sm font-semibold text-muted-foreground mb-3">Font Size / फ़ॉन्ट आकार</p>
+                        <div className="flex flex-wrap gap-2">
                           <Button
                             variant={fontSize === 'normal' ? 'default' : 'outline'}
-                            size="sm"
+                            size="lg"
                             onClick={() => setFontSize('normal')}
+                            className="min-h-[48px] text-base"
                           >
                             Normal
                           </Button>
                           <Button
                             variant={fontSize === 'large' ? 'default' : 'outline'}
-                            size="sm"
+                            size="lg"
                             onClick={() => setFontSize('large')}
+                            className="min-h-[48px] text-base"
                           >
                             Large
+                          </Button>
+                          <Button
+                            variant={fontSize === 'xlarge' ? 'default' : 'outline'}
+                            size="lg"
+                            onClick={() => setFontSize('xlarge')}
+                            className="min-h-[48px] text-base"
+                          >
+                            XL
                           </Button>
                         </div>
                       </div>
                       <div>
-                        <p className="text-xs font-semibold text-muted-foreground mb-2">Theme</p>
+                        <p className="text-sm font-semibold text-muted-foreground mb-3">Theme / थीम</p>
                         <Button
                           variant="outline"
-                          size="sm"
+                          size="lg"
                           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                          className="w-full"
+                          className="w-full min-h-[48px] text-base"
                         >
-                          {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+                          {theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode'}
                         </Button>
                       </div>
                     </div>
                   </div>
                   {!isAuthenticated ? (
-                    <div className="border-t pt-4 space-y-2">
-                      <GoogleSignInButton className="w-full" />
-                      <Button asChild variant="outline" className="w-full" onClick={() => setIsOpen(false)}>
+                    <div className="border-t pt-4 space-y-3">
+                      <Button asChild variant="outline" className="w-full min-h-[52px] text-base" onClick={() => setIsOpen(false)}>
                         <Link href="/sign-in">{t('auth.signIn')}</Link>
                       </Button>
-                      <Button asChild className="w-full bg-primary hover:bg-primary/90" onClick={() => setIsOpen(false)}>
+                      <Button asChild className="w-full bg-primary hover:bg-primary/90 min-h-[52px] text-base" onClick={() => setIsOpen(false)}>
                         <Link href="/sign-up">{t('auth.signUp')}</Link>
                       </Button>
                     </div>
@@ -270,13 +289,13 @@ export function Header() {
                     <div className="border-t pt-4">
                       <Button
                         variant="outline"
-                        className="w-full text-destructive hover:text-destructive"
+                        className="w-full text-destructive hover:text-destructive min-h-[52px] text-base"
                         onClick={() => {
                           signOut()
                           setIsOpen(false)
                         }}
                       >
-                        <LogOut className="h-4 w-4 mr-2" />
+                        <LogOut className="h-5 w-5 mr-2" aria-hidden="true" />
                         {t('auth.signOut')}
                       </Button>
                     </div>

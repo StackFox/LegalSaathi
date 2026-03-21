@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import type { LegalResponse, Language } from '@/lib/types'
-import { answerLegalQueryWithRag } from '@/lib/rag-openai'
+import { answerLegalQueryWithGeminiPinecone } from '@/lib/rag-gemini-pinecone'
+import { answerLegalQueryWithRag as answerWithTfIdf } from '@/lib/rag'
 
 interface ChatRequest {
   query: string
@@ -34,11 +35,28 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
       )
     }
 
-    const data = await answerLegalQueryWithRag({
-      query: body.query,
-      language: body.language,
-      include_audit_log: body.include_audit_log,
-    })
+    let data: LegalResponse
+
+    // Use Gemini + Pinecone if API keys are available, otherwise fallback to TF-IDF
+    if (process.env.GOOGLE_AI_API_KEY && process.env.PINECONE_API_KEY) {
+      data = await answerLegalQueryWithGeminiPinecone({
+        query: body.query,
+        language: body.language,
+        include_audit_log: body.include_audit_log,
+      })
+    } else {
+      // Fallback to TF-IDF based RAG (works without external API)
+      const missingKeys = []
+      if (!process.env.GOOGLE_AI_API_KEY) missingKeys.push('GOOGLE_AI_API_KEY')
+      if (!process.env.PINECONE_API_KEY) missingKeys.push('PINECONE_API_KEY')
+      console.warn(`Missing ${missingKeys.join(', ')} - using TF-IDF fallback for RAG`)
+      
+      data = await answerWithTfIdf({
+        query: body.query,
+        language: body.language,
+        include_audit_log: body.include_audit_log,
+      })
+    }
 
     return NextResponse.json({
       success: true,
@@ -51,7 +69,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
         success: false,
         error: {
           code: 'SERVER_ERROR',
-          message: 'An internal server error occurred. Please try again.',
+          message: error instanceof Error ? error.message : 'An internal server error occurred. Please try again.',
         },
       },
       { status: 500 },
@@ -60,15 +78,23 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
 }
 
 export async function GET(): Promise<NextResponse> {
+  const hasGemini = !!process.env.GOOGLE_AI_API_KEY
+  const hasPinecone = !!process.env.PINECONE_API_KEY
+  
   return NextResponse.json({
     name: 'Legal Saathi Chat API',
-    version: '1.0.0',
+    version: '2.0.0',
     endpoints: {
       chat: {
         method: 'POST',
         path: '/api/chat',
         description: 'Chat-style legal guidance with RAG citations',
       },
+    },
+    mode: hasGemini && hasPinecone ? 'gemini-pinecone' : 'tfidf-fallback',
+    status: {
+      gemini: hasGemini ? 'configured' : 'not configured',
+      pinecone: hasPinecone ? 'configured' : 'not configured',
     },
   })
 }
