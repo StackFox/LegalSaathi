@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense, useRef, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Send, Clock, AlertTriangle, CheckCircle, ListOrdered, Scale, MessageSquare, BookOpen, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -16,6 +17,7 @@ import { AuditTrail } from '@/components/audit-trail'
 import { useLanguage } from '@/lib/language-context'
 import { topicChips } from '@/lib/mock-data'
 import type { LegalResponse, Language as LangType } from '@/lib/types'
+import { PageTransition, fadeInUp } from '@/components/motion'
 
 function AskPageContent() {
   const searchParams = useSearchParams()

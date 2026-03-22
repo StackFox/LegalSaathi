@@ -56,42 +56,43 @@
 html.dark {
   color-scheme: dark;
   
-  --background: #0f172a;
-  --foreground: #f1f5f9;
-  --card: #1a2942;
-  --card-foreground: #f1f5f9;
-  --popover: #1a2942;
-  --popover-foreground: #f1f5f9;
-  --primary: #e0e7ff;
-  --primary-foreground: #0f172a;
-  --secondary: #27355f;
-  --secondary-foreground: #e2e8f0;
-  --muted: #334155;
-  --muted-foreground: #cbd5e1;
-  --accent: #ff8c42;
-  --accent-foreground: #0f172a;
-  --destructive: #ff7f7f;
-  --destructive-foreground: #0f172a;
-  --border: #475569;
-  --input: #1a2942;
-  --ring: #FF6B35;
-  --success: #6ee7b7;
-  --success-foreground: #0f172a;
-  --warning: #fbbf24;
-  --warning-foreground: #0f172a;
+  /* Modern darker theme - deeper blacks with subtle warmth */
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #0c0c0e;
+  --card-foreground: #fafafa;
+  --popover: #0c0c0e;
+  --popover-foreground: #fafafa;
+  --primary: #fafafa;
+  --primary-foreground: #09090b;
+  --secondary: #1c1c1f;
+  --secondary-foreground: #fafafa;
+  --muted: #18181b;
+  --muted-foreground: #a1a1aa;
+  --accent: #ff7a3d;
+  --accent-foreground: #09090b;
+  --destructive: #ef4444;
+  --destructive-foreground: #fafafa;
+  --border: #27272a;
+  --input: #18181b;
+  --ring: #ff7a3d;
+  --success: #22c55e;
+  --success-foreground: #09090b;
+  --warning: #eab308;
+  --warning-foreground: #09090b;
   --chart-1: #60a5fa;
-  --chart-2: #FF6B35;
-  --chart-3: #34d399;
-  --chart-4: #fcd34d;
+  --chart-2: #ff7a3d;
+  --chart-3: #22c55e;
+  --chart-4: #eab308;
   --chart-5: #a78bfa;
-  --sidebar: #0f172a;
-  --sidebar-foreground: #f1f5f9;
-  --sidebar-primary: #ff8c42;
-  --sidebar-primary-foreground: #0f172a;
-  --sidebar-accent: #27355f;
-  --sidebar-accent-foreground: #e2e8f0;
-  --sidebar-border: #475569;
-  --sidebar-ring: #ff8c42;
+  --sidebar: #09090b;
+  --sidebar-foreground: #fafafa;
+  --sidebar-primary: #ff7a3d;
+  --sidebar-primary-foreground: #09090b;
+  --sidebar-accent: #18181b;
+  --sidebar-accent-foreground: #fafafa;
+  --sidebar-border: #27272a;
+  --sidebar-ring: #ff7a3d;
 }
 
 @theme inline {
@@ -268,13 +269,14 @@ html.dark {
     animation: gradient-shift 15s ease infinite;
   }
 
-  /* Smooth transitions */
-  * {
-    @apply transition-colors duration-300 ease-in-out;
+  /* Smooth transitions - exclude elements that shouldn't animate colors */
+  *:not(path):not(svg):not(button):not(a):not([class*="motion"]) {
+    @apply transition-colors duration-200 ease-out;
   }
 
+  /* Button and link transitions - specifically controlled */
   button, a {
-    @apply transition-all duration-200;
+    transition: background-color 0.2s ease-out, color 0.2s ease-out, transform 0.2s ease-out, box-shadow 0.2s ease-out, border-color 0.2s ease-out;
   }
 
   /* Fade in up animation */

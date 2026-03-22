@@ -63,13 +63,13 @@ export function Header() {
       <header className="sticky top-0 z-50 w-full border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-              <Scale className="h-6 w-6 text-primary-foreground" aria-hidden="true" />
+          <Link href="/" className="flex items-center gap-3 flex-shrink-0 group">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-lg group-hover:shadow-primary/25 transition-shadow duration-300">
+              <Scale className="h-5 w-5 text-primary-foreground" aria-hidden="true" />
             </div>
-            <div className="flex flex-col hidden sm:block">
-              <span className="text-lg font-bold text-foreground">{t('header.title')}</span>
-              <span className="text-xs text-muted-foreground">{t('header.subtitle')}</span>
+            <div className="flex-col hidden sm:flex">
+              <span className="text-lg font-bold text-foreground leading-tight">{t('header.title')}</span>
+              <span className="text-[11px] text-muted-foreground leading-tight">{t('header.subtitle')}</span>
             </div>
           </Link>
 
@@ -161,10 +161,10 @@ export function Header() {
             {/* Authentication */}
             {!isAuthenticated ? (
               <div className="hidden sm:flex items-center gap-2">
-                <Button asChild size="sm" variant="outline" className="min-h-[44px]">
+                <Button asChild size="sm" variant="ghost" className="min-h-[44px] text-foreground hover:text-foreground hover:bg-muted">
                   <Link href="/sign-in">{t('auth.signIn')}</Link>
                 </Button>
-                <Button asChild size="sm" className="bg-primary hover:bg-primary/90 min-h-[44px]">
+                <Button asChild size="sm" className="min-h-[44px] bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg shadow-accent/20 hover:shadow-accent/30 transition-all duration-300">
                   <Link href="/sign-up">{t('auth.signUp')}</Link>
                 </Button>
               </div>

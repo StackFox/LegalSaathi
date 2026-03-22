@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
 import { 
   MessageSquare, 
   Search, 
@@ -28,6 +29,7 @@ import { Footer } from '@/components/footer'
 import { LegalDomainBadge } from '@/components/legal-domain-badge'
 import { useLanguage } from '@/lib/language-context'
 import { useAuth } from '@/lib/auth-context'
+import { PageTransition, fadeInUp, staggerContainer, staggerItem } from '@/components/motion'
 
 // Mock user queries for demonstration
 const mockUserQueries = [
@@ -180,17 +182,22 @@ export default function QueriesPage() {
       <Header />
       
       <main className="flex-1 bg-muted/30">
-        <div className="container mx-auto px-4 py-6">
+        <PageTransition className="container mx-auto px-4 py-6">
           {/* Page Header */}
-          <div className="mb-6">
+          <motion.div 
+            className="mb-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <MessageSquare className="h-6 w-6 text-primary" />
+              <MessageSquare className="h-6 w-6 text-accent" />
               {t('nav.myQueries')}
             </h1>
             <p className="mt-1 text-muted-foreground">
               View and manage your previous legal queries
             </p>
-          </div>
+          </motion.div>
 
           {/* Filters */}
           <Card className="mb-6">
@@ -255,9 +262,15 @@ export default function QueriesPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-4">
+            <motion.div 
+              className="space-y-4"
+              initial="hidden"
+              animate="visible"
+              variants={staggerContainer}
+            >
               {filteredQueries.map((query) => (
-                <Card key={query.id} className="hover:border-primary/50 transition-colors">
+                <motion.div key={query.id} variants={staggerItem}>
+                <Card className="hover:border-accent/50 transition-colors">
                   <CardContent className="p-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="flex-1 space-y-2">
@@ -293,8 +306,9 @@ export default function QueriesPage() {
                     </div>
                   </CardContent>
                 </Card>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           )}
 
           {/* Stats Summary */}
@@ -329,7 +343,7 @@ export default function QueriesPage() {
               </div>
             </CardContent>
           </Card>
-        </div>
+        </PageTransition>
       </main>
 
       <Footer />
