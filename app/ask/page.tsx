@@ -2,8 +2,7 @@
 
 import { useState, useEffect, Suspense, useRef, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Send, Clock, AlertTriangle, CheckCircle, ListOrdered, Scale, MessageSquare, BookOpen, Loader2 } from 'lucide-react'
+import { Send, Clock, AlertTriangle, CheckCircle, ListOrdered, Scale, MessageSquare, BookOpen, Loader2, Mic, MicOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
@@ -15,9 +14,10 @@ import { StatuteCard } from '@/components/statute-card'
 import { EscalationBanner } from '@/components/escalation-banner'
 import { AuditTrail } from '@/components/audit-trail'
 import { useLanguage } from '@/lib/language-context'
+import { useVoiceInput } from '@/lib/use-voice-input'
 import { topicChips } from '@/lib/mock-data'
 import type { LegalResponse, Language as LangType } from '@/lib/types'
-import { PageTransition, fadeInUp } from '@/components/motion'
+import { cn } from '@/lib/utils'
 
 function AskPageContent() {
   const searchParams = useSearchParams()
@@ -27,6 +27,21 @@ function AskPageContent() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [response, setResponse] = useState<LegalResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  // Voice input hook
+  const { isListening, isSupported, transcript, error: voiceError, toggleListening } = useVoiceInput({
+    language: selectedLang,
+    onResult: useCallback((text: string) => {
+      setQuery(prev => prev ? `${prev} ${text}` : text)
+    }, []),
+  })
+
+  // Update query with transcript while listening
+  useEffect(() => {
+    if (transcript && isListening) {
+      setQuery(transcript)
+    }
+  }, [transcript, isListening])
   const [hasSubmitted, setHasSubmitted] = useState(false)
   const initialQueryHandled = useRef(false)
 
@@ -153,18 +168,54 @@ function AskPageContent() {
                 </CardHeader>
                 <CardContent className="flex-1 flex flex-col p-4 space-y-4">
                   {/* Query Input */}
-                  <Textarea
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder={t('ask.placeholder')}
-                    className="min-h-[100px] resize-none text-base flex-shrink-0"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault()
-                        handleSubmitQuery()
-                      }
-                    }}
-                  />
+                  <div className="relative">
+                    <Textarea
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      placeholder={isListening ? t('voice.listening') + '...' : t('ask.placeholder')}
+                      className={cn(
+                        "min-h-[100px] resize-none text-base pr-12",
+                        isListening && "border-accent"
+                      )}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault()
+                          handleSubmitQuery()
+                        }
+                      }}
+                    />
+                    {/* Voice Input Button */}
+                    {isSupported && (
+                      <button
+                        type="button"
+                        onClick={toggleListening}
+                        className={cn(
+                          "absolute top-3 right-3 p-2 rounded-lg transition-all duration-200",
+                          isListening 
+                            ? "bg-accent text-accent-foreground animate-pulse" 
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        )}
+                        aria-label={isListening ? t('voice.stopListening') : t('voice.startListening')}
+                      >
+                        {isListening ? (
+                          <MicOff className="h-5 w-5" />
+                        ) : (
+                          <Mic className="h-5 w-5" />
+                        )}
+                      </button>
+                    )}
+                  </div>
+                  
+                  {/* Voice status indicators */}
+                  {voiceError && (
+                    <p className="text-sm text-destructive">{voiceError}</p>
+                  )}
+                  {isListening && (
+                    <p className="text-sm text-accent flex items-center gap-2">
+                      <span className="w-2 h-2 bg-accent rounded-full animate-pulse" />
+                      {t('voice.listening')}...
+                    </p>
+                  )}
                   
                   <Button 
                     onClick={() => handleSubmitQuery()}

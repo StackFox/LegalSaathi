@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { Scale, Menu, Sun, Moon, Type, Globe, LogOut } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Scale, Menu, Sun, Moon, Type, Globe, LogOut, LogIn, Lock, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import {
@@ -12,6 +13,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useState, useEffect } from 'react'
 import { useTheme } from 'next-themes'
@@ -34,6 +42,8 @@ const uiLanguages: { code: Language; label: string; nativeLabel: string }[] = [
 export function Header() {
   const [isOpen, setIsOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const router = useRouter()
   const { theme, setTheme } = useTheme()
   const { language, setLanguage, t, fontSize, setFontSize } = useLanguage()
   const { isAuthenticated, user, signOut } = useAuth()
@@ -41,6 +51,13 @@ export function Header() {
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  const handleAskClick = (e: React.MouseEvent) => {
+    if (!isAuthenticated) {
+      e.preventDefault()
+      setShowAuthModal(true)
+    }
+  }
 
   const navLinks = [
     { href: '/', label: t('nav.home') },
@@ -79,6 +96,7 @@ export function Header() {
               <Link
                 key={link.href}
                 href={link.href}
+                onClick={link.href === '/ask' ? handleAskClick : undefined}
                 className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-sm px-1"
               >
                 {link.label}
@@ -224,7 +242,15 @@ export function Header() {
                         key={link.href}
                         href={link.href}
                         className="flex items-center py-3 px-3 text-base font-medium text-foreground hover:bg-muted rounded-lg transition-colors"
-                        onClick={() => setIsOpen(false)}
+                        onClick={(e) => {
+                          if (link.href === '/ask' && !isAuthenticated) {
+                            e.preventDefault()
+                            setIsOpen(false)
+                            setShowAuthModal(true)
+                          } else {
+                            setIsOpen(false)
+                          }
+                        }}
                       >
                         {link.label}
                       </Link>
@@ -355,6 +381,49 @@ export function Header() {
           </div>
         </div>
       </header>
+
+      {/* Sign-in Required Modal */}
+      <Dialog open={showAuthModal} onOpenChange={setShowAuthModal}>
+        <DialogContent className="sm:max-w-md mx-4 rounded-xl">
+          <DialogHeader>
+            <div className="mx-auto flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-accent/10 mb-3 sm:mb-4">
+              <LogIn className="h-6 w-6 sm:h-8 sm:w-8 text-accent" aria-hidden="true" />
+            </div>
+            <DialogTitle className="text-center text-lg sm:text-xl">
+              {t('modal.pleaseSignIn')}
+            </DialogTitle>
+            <DialogDescription className="text-center text-sm sm:text-base pt-2">
+              {t('modal.signInDescription')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 pt-4">
+            <Button 
+              onClick={() => {
+                setShowAuthModal(false)
+                router.push('/sign-in')
+              }}
+              className="w-full min-h-[44px] sm:min-h-[52px] text-sm sm:text-base bg-accent hover:bg-accent/90 text-accent-foreground"
+            >
+              {t('auth.signIn')}
+              <ArrowRight className="ml-2 w-4 h-4" />
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowAuthModal(false)
+                router.push('/sign-up')
+              }}
+              className="w-full min-h-[44px] sm:min-h-[52px] text-sm sm:text-base"
+            >
+              {t('modal.createAccount')}
+            </Button>
+            <p className="text-center text-xs sm:text-sm text-muted-foreground pt-2 flex items-center justify-center gap-2">
+              <Lock className="w-3 h-3 sm:w-4 sm:h-4" />
+              {t('modal.infoSecure')}
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

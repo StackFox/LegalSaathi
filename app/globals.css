@@ -265,14 +265,13 @@ html.dark {
     animation: gradient-shift 15s ease infinite;
   }
 
-  /* Smooth transitions - exclude elements that shouldn't animate colors */
-  *:not(path):not(svg):not(button):not(a):not([class*="motion"]) {
-    @apply transition-colors duration-200 ease-out;
-  }
-
-  /* Button and link transitions - specifically controlled */
-  button, a {
-    transition: background-color 0.2s ease-out, color 0.2s ease-out, transform 0.2s ease-out, box-shadow 0.2s ease-out, border-color 0.2s ease-out;
+  /* Reduced motion preference - disable animations */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 
   /* Fade in up animation */
@@ -471,31 +470,7 @@ html.dark {
     }
   }
 
-  /* Animated mesh gradient background */
-  @keyframes mesh-move {
-    0%, 100% {
-      transform: translate(0, 0) scale(1);
-    }
-    25% {
-      transform: translate(50px, -30px) scale(1.05);
-    }
-    50% {
-      transform: translate(-20px, 50px) scale(0.95);
-    }
-    75% {
-      transform: translate(-50px, -20px) scale(1.02);
-    }
-  }
-
-  @keyframes gradient-rotate {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-
+  /* Static mesh gradient background - no animation for performance */
   .mesh-gradient {
     position: absolute;
     inset: 0;
@@ -514,7 +489,6 @@ html.dark {
       radial-gradient(ellipse 60% 40% at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
       radial-gradient(ellipse 50% 60% at 40% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
       radial-gradient(ellipse 70% 50% at 70% 70%, rgba(249, 115, 22, 0.1) 0%, transparent 50%);
-    animation: mesh-move 20s ease-in-out infinite;
   }
 
   html.dark .mesh-gradient::before {
@@ -542,50 +516,9 @@ html.dark {
       linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
   }
 
-  /* Floating orbs */
-  @keyframes orb-float-1 {
-    0%, 100% {
-      transform: translate(0, 0) scale(1);
-      opacity: 0.4;
-    }
-    50% {
-      transform: translate(30px, -40px) scale(1.1);
-      opacity: 0.6;
-    }
-  }
-
-  @keyframes orb-float-2 {
-    0%, 100% {
-      transform: translate(0, 0) scale(1);
-      opacity: 0.3;
-    }
-    50% {
-      transform: translate(-40px, 30px) scale(0.9);
-      opacity: 0.5;
-    }
-  }
-
-  @keyframes orb-float-3 {
-    0%, 100% {
-      transform: translate(0, 0);
-      opacity: 0.2;
-    }
-    50% {
-      transform: translate(20px, 20px);
-      opacity: 0.35;
-    }
-  }
-
-  .orb-1 {
-    animation: orb-float-1 8s ease-in-out infinite;
-  }
-
-  .orb-2 {
-    animation: orb-float-2 10s ease-in-out infinite;
-  }
-
-  .orb-3 {
-    animation: orb-float-3 12s ease-in-out infinite;
+  /* Static orbs - removed animations for performance */
+  .orb-1, .orb-2, .orb-3 {
+    /* Static decorative elements - no animations */
   }
 
   /* Phone mockup glow */
