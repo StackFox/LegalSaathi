@@ -202,7 +202,7 @@ export default function LandingPage() {
                           type="button"
                           onClick={toggleListening}
                           className={cn(
-                            "hidden sm:flex mr-2 sm:mr-3 rounded-lg p-2 sm:p-3 min-w-[36px] sm:min-w-[44px] min-h-[36px] sm:min-h-[44px] transition-all duration-200",
+                            "flex items-center justify-center mr-2 sm:mr-3 rounded-lg p-2 sm:p-3 min-w-[36px] sm:min-w-[44px] min-h-[36px] sm:min-h-[44px] transition-all duration-200",
                             isListening 
                               ? "bg-accent text-accent-foreground animate-pulse" 
                               : "text-muted-foreground hover:bg-muted hover:text-foreground"

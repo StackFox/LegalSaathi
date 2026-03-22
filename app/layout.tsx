@@ -26,9 +26,9 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Legal Saathi - Free Legal Help in Your Language',
-  description: 'AI-powered legal aid assistant providing free legal guidance to underserved communities in India. Get help with RTI, consumer complaints, tenant rights, and more in Hindi and English.',
-  keywords: ['legal aid', 'free legal help', 'RTI', 'consumer rights', 'India', 'Hindi', 'legal assistant'],
+  title: 'Legal Saathi - Legal Help in Your Language',
+  description: 'AI-powered legal aid assistant providing legal guidance to underserved communities in India. Get help with RTI, consumer complaints, tenant rights, and more in Hindi and English.',
+  keywords: ['legal aid', 'legal help', 'RTI', 'consumer rights', 'India', 'Hindi', 'legal assistant'],
   authors: [{ name: 'Legal Saathi' }],
   icons: {
     icon: [

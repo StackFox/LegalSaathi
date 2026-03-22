@@ -20,6 +20,8 @@ export interface CitedSection {
   title: string
   snippet: string
   relevance: RelevanceLevel
+  relevance_score?: number // Percentage 0-100
+  explanation?: string // Detailed legal explanation
 }
 
 export interface AuditLogEntry {

@@ -2,10 +2,11 @@
 
 import { useState, useEffect, Suspense, useRef, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Send, Clock, AlertTriangle, CheckCircle, ListOrdered, Scale, MessageSquare, BookOpen, Loader2, Mic, MicOff } from 'lucide-react'
+import { Send, Clock, AlertTriangle, CheckCircle, ListOrdered, Scale, MessageSquare, BookOpen, Loader2, Mic, MicOff, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/components/ui/input'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { LegalDomainBadge } from '@/components/legal-domain-badge'
@@ -13,6 +14,7 @@ import { ConfidenceMeter } from '@/components/confidence-meter'
 import { StatuteCard } from '@/components/statute-card'
 import { EscalationBanner } from '@/components/escalation-banner'
 import { AuditTrail } from '@/components/audit-trail'
+import { MarkdownContent } from '@/components/markdown-content'
 import { useLanguage } from '@/lib/language-context'
 import { useVoiceInput } from '@/lib/use-voice-input'
 import { topicChips } from '@/lib/mock-data'
@@ -23,9 +25,11 @@ function AskPageContent() {
   const searchParams = useSearchParams()
   const { t, language: uiLanguage } = useLanguage()
   const [query, setQuery] = useState('')
+  const [followUpQuery, setFollowUpQuery] = useState('')
   const [selectedLang, setSelectedLang] = useState<LangType>(uiLanguage as LangType)
   const [isProcessing, setIsProcessing] = useState(false)
   const [response, setResponse] = useState<LegalResponse | null>(null)
+  const [conversationHistory, setConversationHistory] = useState<Array<{ role: 'user' | 'assistant', content: string, response?: LegalResponse }>>([])
   const [error, setError] = useState<string | null>(null)
 
   // Voice input hook
@@ -52,21 +56,32 @@ function AskPageContent() {
     setSelectedLang(uiLanguage as LangType)
   }, [uiLanguage])
 
-  const handleSubmitQuery = useCallback(async (queryText?: string) => {
+  const handleSubmitQuery = useCallback(async (queryText?: string, isFollowUp = false) => {
     const actualQuery = queryText || query
     if (!actualQuery.trim()) return
 
     setIsProcessing(true)
-    setResponse(null)
     setError(null)
     setHasSubmitted(true)
+    
+    // Add user message to history
+    if (!isFollowUp) {
+      setConversationHistory([{ role: 'user', content: actualQuery }])
+    } else {
+      setConversationHistory(prev => [...prev, { role: 'user', content: actualQuery }])
+    }
 
     try {
+      // Include context from previous queries for follow-ups
+      const contextQuery = isFollowUp && response 
+        ? `Previous query: "${response.query}"\n\nFollow-up question: ${actualQuery}`
+        : actualQuery
+
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          query: actualQuery,
+          query: contextQuery,
           language: selectedLang,
           include_audit_log: true,
         }),
@@ -80,13 +95,35 @@ function AskPageContent() {
 
       const data: LegalResponse = json.data
       setResponse(data)
+      
+      // Add assistant response to history
+      setConversationHistory(prev => [...prev, { role: 'assistant', content: data.action_steps.join('\n'), response: data }])
+      
+      // Clear follow-up input after successful submission
+      if (isFollowUp) {
+        setFollowUpQuery('')
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Something went wrong'
       setError(msg)
     } finally {
       setIsProcessing(false)
     }
-  }, [query, selectedLang])
+  }, [query, selectedLang, response])
+  
+  const handleFollowUp = useCallback(() => {
+    if (!followUpQuery.trim()) return
+    handleSubmitQuery(followUpQuery, true)
+  }, [followUpQuery, handleSubmitQuery])
+  
+  const handleNewQuestion = useCallback(() => {
+    setQuery('')
+    setFollowUpQuery('')
+    setResponse(null)
+    setConversationHistory([])
+    setHasSubmitted(false)
+    setError(null)
+  }, [])
 
   // Handle initial query from URL params (only once)
   useEffect(() => {
@@ -259,7 +296,7 @@ function AskPageContent() {
                   </div>
 
                   {/* Response Summary in Chat */}
-                  <div ref={chatRef} className="flex-1 min-h-[200px] max-h-[300px] overflow-y-auto space-y-3 pt-2 border-t">
+                  <div ref={chatRef} className="flex-1 min-h-[200px] max-h-[350px] overflow-y-auto space-y-3 pt-2 border-t">
                     {!hasSubmitted && !isProcessing && (
                       <div className="flex flex-col items-center justify-center h-full py-8 text-center">
                         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
@@ -271,7 +308,7 @@ function AskPageContent() {
                       </div>
                     )}
 
-                    {isProcessing && (
+                    {isProcessing && conversationHistory.length === 0 && (
                       <div className="flex flex-col items-center justify-center h-full py-8">
                         <div className="relative">
                           <div className="h-16 w-16 rounded-full border-4 border-muted animate-pulse" />
@@ -282,35 +319,81 @@ function AskPageContent() {
                       </div>
                     )}
 
-                    {response && !isProcessing && (
-                      <div className="space-y-3">
-                        {/* User Query */}
-                        <div className="flex justify-end">
+                    {/* Conversation History */}
+                    {conversationHistory.map((msg, idx) => (
+                      <div key={idx} className={cn("flex", msg.role === 'user' ? "justify-end" : "justify-start")}>
+                        {msg.role === 'user' ? (
                           <div className="max-w-[85%] rounded-2xl px-4 py-2 text-sm bg-primary/10 border border-primary/20">
-                            {query}
+                            {msg.content}
                           </div>
-                        </div>
-                        
-                        {/* AI Response Summary */}
-                        <div className="flex justify-start">
+                        ) : (
                           <div className="max-w-[85%] rounded-2xl px-4 py-3 text-sm bg-muted/50 border">
-                            <div className="flex items-center gap-2 mb-2">
-                              <LegalDomainBadge domain={response.domain} size="sm" />
-                              <span className="text-xs text-muted-foreground">
-                                {response.confidence_score}% {t('ask.confidence')}
-                              </span>
-                            </div>
-                            <p className="text-foreground leading-relaxed">
-                              {response.action_steps[0]}
-                            </p>
+                            {msg.response && (
+                              <div className="flex items-center gap-2 mb-2">
+                                <LegalDomainBadge domain={msg.response.domain} size="sm" />
+                                <span className="text-xs text-muted-foreground">
+                                  {msg.response.confidence_score}% {t('ask.confidence')}
+                                </span>
+                              </div>
+                            )}
+                            <MarkdownContent content={msg.content} className="text-foreground" />
                             <p className="mt-2 text-xs text-muted-foreground">
                               {t('ask.seeDetailedGuidance')} →
                             </p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    
+                    {/* Loading indicator for follow-up */}
+                    {isProcessing && conversationHistory.length > 0 && (
+                      <div className="flex justify-start">
+                        <div className="rounded-2xl px-4 py-3 bg-muted/50 border">
+                          <div className="flex items-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                            <span className="text-sm text-muted-foreground">{t('ask.analyzingQuery')}...</span>
                           </div>
                         </div>
                       </div>
                     )}
                   </div>
+                  
+                  {/* Follow-up Input (shown after response) */}
+                  {response && !isProcessing && (
+                    <div className="pt-3 border-t space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={followUpQuery}
+                          onChange={(e) => setFollowUpQuery(e.target.value)}
+                          placeholder={t('ask.followUpPlaceholder')}
+                          className="flex-1"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault()
+                              handleFollowUp()
+                            }
+                          }}
+                        />
+                        <Button 
+                          onClick={handleFollowUp}
+                          disabled={!followUpQuery.trim() || isProcessing}
+                          size="icon"
+                          className="shrink-0"
+                        >
+                          <Send className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={handleNewQuestion}
+                        className="w-full"
+                      >
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        {t('ask.newQuestion')}
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -422,7 +505,9 @@ function AskPageContent() {
                             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                               {idx + 1}
                             </span>
-                            <span className="text-sm text-foreground leading-relaxed">{step}</span>
+                            <div className="text-sm text-foreground leading-relaxed flex-1">
+                              <MarkdownContent content={step} />
+                            </div>
                           </li>
                         ))}
                       </ol>
