@@ -182,9 +182,12 @@ export async function answerLegalQueryWithRag(params: {
   const cited_sections: CitedSection[] = docsInTopic.map(({ doc, score }) => {
     const relRatio = maxScoreInTopic > 0 ? score / maxScoreInTopic : 0
     const relevance = relRatio >= 0.7 ? 'High' : relRatio >= 0.35 ? 'Medium' : 'Low'
+    // Calculate relevance percentage (scale to 40-98 range based on relRatio)
+    const relevance_score = Math.round(40 + relRatio * 58)
     return {
       ...doc.citedSection,
       relevance,
+      relevance_score,
       snippet: doc.citedSection.snippet,
     }
   })

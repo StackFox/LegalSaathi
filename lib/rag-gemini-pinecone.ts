@@ -338,12 +338,15 @@ export async function answerLegalQueryWithGeminiPinecone(params: {
   const cited_sections: CitedSection[] = selectedResults.map((result) => {
     const ratio = maxScore > 0 ? result.score / maxScore : 0
     const relevance = ratio >= 0.7 ? 'High' : ratio >= 0.35 ? 'Medium' : 'Low'
+    // Calculate relevance percentage (scale to 40-98 range based on ratio)
+    const relevance_score = Math.round(40 + ratio * 58)
     return {
       act: result.metadata.act,
       section: result.metadata.section,
       title: result.metadata.title,
       snippet: result.metadata.snippet,
       relevance,
+      relevance_score,
     }
   })
 

@@ -1,6 +1,6 @@
 // Legal Saathi Types
 
-export type Language = 'en' | 'hi' | 'ta' | 'te' | 'bn' | 'mr'
+export type Language = 'en' | 'hi' | 'ta' | 'te' | 'bn' | 'mr' | 'gu' | 'kn' | 'ml' | 'pa'
 
 export type LegalDomain = 
   | 'IPC' 
@@ -20,6 +20,8 @@ export interface CitedSection {
   title: string
   snippet: string
   relevance: RelevanceLevel
+  relevance_score?: number // Percentage 0-100
+  explanation?: string // Detailed legal explanation
 }
 
 export interface AuditLogEntry {

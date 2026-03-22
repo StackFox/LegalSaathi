@@ -2,10 +2,11 @@
 
 import { useState, useEffect, Suspense, useRef, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Send, Clock, AlertTriangle, CheckCircle, ListOrdered, Scale, MessageSquare, BookOpen, Loader2 } from 'lucide-react'
+import { Send, Clock, AlertTriangle, CheckCircle, ListOrdered, Scale, MessageSquare, BookOpen, Loader2, Mic, MicOff, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/components/ui/input'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { LegalDomainBadge } from '@/components/legal-domain-badge'
@@ -13,18 +14,38 @@ import { ConfidenceMeter } from '@/components/confidence-meter'
 import { StatuteCard } from '@/components/statute-card'
 import { EscalationBanner } from '@/components/escalation-banner'
 import { AuditTrail } from '@/components/audit-trail'
+import { MarkdownContent } from '@/components/markdown-content'
 import { useLanguage } from '@/lib/language-context'
-import { languageOptions, topicChips } from '@/lib/mock-data'
+import { useVoiceInput } from '@/lib/use-voice-input'
+import { topicChips } from '@/lib/mock-data'
 import type { LegalResponse, Language as LangType } from '@/lib/types'
+import { cn } from '@/lib/utils'
 
 function AskPageContent() {
   const searchParams = useSearchParams()
   const { t, language: uiLanguage } = useLanguage()
   const [query, setQuery] = useState('')
+  const [followUpQuery, setFollowUpQuery] = useState('')
   const [selectedLang, setSelectedLang] = useState<LangType>(uiLanguage as LangType)
   const [isProcessing, setIsProcessing] = useState(false)
   const [response, setResponse] = useState<LegalResponse | null>(null)
+  const [conversationHistory, setConversationHistory] = useState<Array<{ role: 'user' | 'assistant', content: string, response?: LegalResponse }>>([])
   const [error, setError] = useState<string | null>(null)
+
+  // Voice input hook
+  const { isListening, isSupported, transcript, error: voiceError, toggleListening } = useVoiceInput({
+    language: selectedLang,
+    onResult: useCallback((text: string) => {
+      setQuery(prev => prev ? `${prev} ${text}` : text)
+    }, []),
+  })
+
+  // Update query with transcript while listening
+  useEffect(() => {
+    if (transcript && isListening) {
+      setQuery(transcript)
+    }
+  }, [transcript, isListening])
   const [hasSubmitted, setHasSubmitted] = useState(false)
   const initialQueryHandled = useRef(false)
 
@@ -35,21 +56,32 @@ function AskPageContent() {
     setSelectedLang(uiLanguage as LangType)
   }, [uiLanguage])
 
-  const handleSubmitQuery = useCallback(async (queryText?: string) => {
+  const handleSubmitQuery = useCallback(async (queryText?: string, isFollowUp = false) => {
     const actualQuery = queryText || query
     if (!actualQuery.trim()) return
 
     setIsProcessing(true)
-    setResponse(null)
     setError(null)
     setHasSubmitted(true)
+    
+    // Add user message to history
+    if (!isFollowUp) {
+      setConversationHistory([{ role: 'user', content: actualQuery }])
+    } else {
+      setConversationHistory(prev => [...prev, { role: 'user', content: actualQuery }])
+    }
 
     try {
+      // Include context from previous queries for follow-ups
+      const contextQuery = isFollowUp && response 
+        ? `Previous query: "${response.query}"\n\nFollow-up question: ${actualQuery}`
+        : actualQuery
+
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          query: actualQuery,
+          query: contextQuery,
           language: selectedLang,
           include_audit_log: true,
         }),
@@ -63,13 +95,35 @@ function AskPageContent() {
 
       const data: LegalResponse = json.data
       setResponse(data)
+      
+      // Add assistant response to history
+      setConversationHistory(prev => [...prev, { role: 'assistant', content: data.action_steps.join('\n'), response: data }])
+      
+      // Clear follow-up input after successful submission
+      if (isFollowUp) {
+        setFollowUpQuery('')
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Something went wrong'
       setError(msg)
     } finally {
       setIsProcessing(false)
     }
-  }, [query, selectedLang])
+  }, [query, selectedLang, response])
+  
+  const handleFollowUp = useCallback(() => {
+    if (!followUpQuery.trim()) return
+    handleSubmitQuery(followUpQuery, true)
+  }, [followUpQuery, handleSubmitQuery])
+  
+  const handleNewQuestion = useCallback(() => {
+    setQuery('')
+    setFollowUpQuery('')
+    setResponse(null)
+    setConversationHistory([])
+    setHasSubmitted(false)
+    setError(null)
+  }, [])
 
   // Handle initial query from URL params (only once)
   useEffect(() => {
@@ -125,20 +179,20 @@ function AskPageContent() {
       <Header />
       
       <main className="flex-1 bg-muted/30">
-        <div className="container mx-auto px-4 py-6">
+        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
           {/* Page Title */}
-          <div className="mb-6 text-center">
-            <h1 className="text-2xl font-bold text-foreground flex items-center justify-center gap-2">
-              <Scale className="h-6 w-6 text-primary" />
+          <div className="mb-4 sm:mb-6 text-center">
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center justify-center gap-2">
+              <Scale className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
               {t('nav.ask')}
             </h1>
-            <p className="mt-1 text-muted-foreground">
+            <p className="mt-1 text-sm sm:text-base text-muted-foreground px-2">
               {t('ask.emptyDescription')}
             </p>
           </div>
 
           {/* Main Grid - Split Layout */}
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
             
             {/* LEFT PANEL - Chat Interface */}
             <div className="space-y-4">
@@ -150,36 +204,55 @@ function AskPageContent() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="flex-1 flex flex-col p-4 space-y-4">
-                  {/* Language Selector */}
-                  <div className="flex flex-wrap gap-2">
-                    {languageOptions.map((lang) => (
-                      <button
-                        key={lang.code}
-                        onClick={() => setSelectedLang(lang.code as LangType)}
-                        className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-                          selectedLang === lang.code
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                        }`}
-                      >
-                        {lang.nativeLabel}
-                      </button>
-                    ))}
-                  </div>
-
                   {/* Query Input */}
-                  <Textarea
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder={t('ask.placeholder')}
-                    className="min-h-[100px] resize-none text-base flex-shrink-0"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault()
-                        handleSubmitQuery()
-                      }
-                    }}
-                  />
+                  <div className="relative">
+                    <Textarea
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      placeholder={isListening ? t('voice.listening') + '...' : t('ask.placeholder')}
+                      className={cn(
+                        "min-h-[100px] resize-none text-base pr-12",
+                        isListening && "border-accent"
+                      )}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault()
+                          handleSubmitQuery()
+                        }
+                      }}
+                    />
+                    {/* Voice Input Button */}
+                    {isSupported && (
+                      <button
+                        type="button"
+                        onClick={toggleListening}
+                        className={cn(
+                          "absolute top-3 right-3 p-2 rounded-lg transition-all duration-200",
+                          isListening 
+                            ? "bg-accent text-accent-foreground animate-pulse" 
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        )}
+                        aria-label={isListening ? t('voice.stopListening') : t('voice.startListening')}
+                      >
+                        {isListening ? (
+                          <MicOff className="h-5 w-5" />
+                        ) : (
+                          <Mic className="h-5 w-5" />
+                        )}
+                      </button>
+                    )}
+                  </div>
+                  
+                  {/* Voice status indicators */}
+                  {voiceError && (
+                    <p className="text-sm text-destructive">{voiceError}</p>
+                  )}
+                  {isListening && (
+                    <p className="text-sm text-accent flex items-center gap-2">
+                      <span className="w-2 h-2 bg-accent rounded-full animate-pulse" />
+                      {t('voice.listening')}...
+                    </p>
+                  )}
                   
                   <Button 
                     onClick={() => handleSubmitQuery()}
@@ -189,7 +262,7 @@ function AskPageContent() {
                     {isProcessing ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Processing...
+                        {t('ask.processing')}
                       </>
                     ) : (
                       <>
@@ -223,58 +296,104 @@ function AskPageContent() {
                   </div>
 
                   {/* Response Summary in Chat */}
-                  <div ref={chatRef} className="flex-1 min-h-[200px] max-h-[300px] overflow-y-auto space-y-3 pt-2 border-t">
+                  <div ref={chatRef} className="flex-1 min-h-[200px] max-h-[350px] overflow-y-auto space-y-3 pt-2 border-t">
                     {!hasSubmitted && !isProcessing && (
                       <div className="flex flex-col items-center justify-center h-full py-8 text-center">
                         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
                           <Send className="h-6 w-6 text-muted-foreground" />
                         </div>
                         <p className="mt-3 text-sm text-muted-foreground">
-                          Ask any legal question in your language
+                          {t('ask.emptyPrompt')}
                         </p>
                       </div>
                     )}
 
-                    {isProcessing && (
+                    {isProcessing && conversationHistory.length === 0 && (
                       <div className="flex flex-col items-center justify-center h-full py-8">
                         <div className="relative">
                           <div className="h-16 w-16 rounded-full border-4 border-muted animate-pulse" />
                           <Loader2 className="absolute inset-0 m-auto h-8 w-8 text-primary animate-spin" />
                         </div>
-                        <p className="mt-4 text-sm font-medium text-foreground">Analyzing your query...</p>
-                        <p className="mt-1 text-xs text-muted-foreground">Searching legal database</p>
+                        <p className="mt-4 text-sm font-medium text-foreground">{t('ask.analyzingQuery')}...</p>
+                        <p className="mt-1 text-xs text-muted-foreground">{t('ask.searchingLegal')}</p>
                       </div>
                     )}
 
-                    {response && !isProcessing && (
-                      <div className="space-y-3">
-                        {/* User Query */}
-                        <div className="flex justify-end">
+                    {/* Conversation History */}
+                    {conversationHistory.map((msg, idx) => (
+                      <div key={idx} className={cn("flex", msg.role === 'user' ? "justify-end" : "justify-start")}>
+                        {msg.role === 'user' ? (
                           <div className="max-w-[85%] rounded-2xl px-4 py-2 text-sm bg-primary/10 border border-primary/20">
-                            {query}
+                            {msg.content}
                           </div>
-                        </div>
-                        
-                        {/* AI Response Summary */}
-                        <div className="flex justify-start">
+                        ) : (
                           <div className="max-w-[85%] rounded-2xl px-4 py-3 text-sm bg-muted/50 border">
-                            <div className="flex items-center gap-2 mb-2">
-                              <LegalDomainBadge domain={response.domain} size="sm" />
-                              <span className="text-xs text-muted-foreground">
-                                {response.confidence_score}% confidence
-                              </span>
-                            </div>
-                            <p className="text-foreground leading-relaxed">
-                              {response.action_steps[0]}
-                            </p>
+                            {msg.response && (
+                              <div className="flex items-center gap-2 mb-2">
+                                <LegalDomainBadge domain={msg.response.domain} size="sm" />
+                                <span className="text-xs text-muted-foreground">
+                                  {msg.response.confidence_score}% {t('ask.confidence')}
+                                </span>
+                              </div>
+                            )}
+                            <MarkdownContent content={msg.content} className="text-foreground" />
                             <p className="mt-2 text-xs text-muted-foreground">
-                              See detailed guidance in the panel →
+                              {t('ask.seeDetailedGuidance')} →
                             </p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    
+                    {/* Loading indicator for follow-up */}
+                    {isProcessing && conversationHistory.length > 0 && (
+                      <div className="flex justify-start">
+                        <div className="rounded-2xl px-4 py-3 bg-muted/50 border">
+                          <div className="flex items-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                            <span className="text-sm text-muted-foreground">{t('ask.analyzingQuery')}...</span>
                           </div>
                         </div>
                       </div>
                     )}
                   </div>
+                  
+                  {/* Follow-up Input (shown after response) */}
+                  {response && !isProcessing && (
+                    <div className="pt-3 border-t space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={followUpQuery}
+                          onChange={(e) => setFollowUpQuery(e.target.value)}
+                          placeholder={t('ask.followUpPlaceholder')}
+                          className="flex-1"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault()
+                              handleFollowUp()
+                            }
+                          }}
+                        />
+                        <Button 
+                          onClick={handleFollowUp}
+                          disabled={!followUpQuery.trim() || isProcessing}
+                          size="icon"
+                          className="shrink-0"
+                        >
+                          <Send className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={handleNewQuestion}
+                        className="w-full"
+                      >
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        {t('ask.newQuestion')}
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -290,19 +409,19 @@ function AskPageContent() {
                         <Scale className="h-12 w-12 text-primary/20" />
                         <Loader2 className="absolute inset-0 m-auto h-6 w-6 text-primary animate-spin" />
                       </div>
-                      <h3 className="text-lg font-semibold">Searching Legal Database</h3>
+                      <h3 className="text-lg font-semibold">{t('ask.searchingLegal')}</h3>
                       <div className="mt-4 space-y-2 text-sm text-muted-foreground">
                         <p className="flex items-center gap-2">
                           <CheckCircle className="h-4 w-4 text-green-500" />
-                          Analyzing your question
+                          {t('ask.analyzingQuery')}
                         </p>
                         <p className="flex items-center gap-2">
                           <Loader2 className="h-4 w-4 animate-spin" />
-                          Searching Indian legal statutes
+                          {t('ask.searchingStatutes')}
                         </p>
                         <p className="flex items-center gap-2 opacity-50">
                           <Clock className="h-4 w-4" />
-                          Generating guidance
+                          {t('ask.generatingGuidance')}
                         </p>
                       </div>
                     </div>
@@ -318,10 +437,10 @@ function AskPageContent() {
                       <BookOpen className="h-8 w-8 text-muted-foreground" />
                     </div>
                     <h3 className="mt-4 text-lg font-semibold text-foreground">
-                      Legal Guidance
+                      {t('ask.legalGuidanceTitle')}
                     </h3>
                     <p className="mt-2 max-w-sm text-muted-foreground leading-relaxed">
-                      Relevant laws, action steps, and deadlines will appear here after you submit your question.
+                      {t('ask.guidanceDescription')}
                     </p>
                   </CardContent>
                 </Card>
@@ -339,7 +458,7 @@ function AskPageContent() {
                           <div>
                             <p className="text-sm font-medium">{response.domain}</p>
                             <p className="text-xs text-muted-foreground">
-                              {response.detected_language} Query
+                              {response.detected_language} {t('ask.query')}
                             </p>
                           </div>
                         </div>
@@ -386,7 +505,9 @@ function AskPageContent() {
                             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                               {idx + 1}
                             </span>
-                            <span className="text-sm text-foreground leading-relaxed">{step}</span>
+                            <div className="text-sm text-foreground leading-relaxed flex-1">
+                              <MarkdownContent content={step} />
+                            </div>
                           </li>
                         ))}
                       </ol>

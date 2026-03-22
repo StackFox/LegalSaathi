@@ -355,7 +355,7 @@ export default function ApiDocsPage() {
                 <CardContent>
                   <div className="grid gap-4 sm:grid-cols-3">
                     <div className="rounded-lg border p-4">
-                      <h4 className="font-semibold text-foreground">Free</h4>
+                      <h4 className="font-semibold text-foreground">Basic</h4>
                       <p className="mt-1 text-2xl font-bold text-foreground">100</p>
                       <p className="text-sm text-muted-foreground">requests/day</p>
                     </div>
