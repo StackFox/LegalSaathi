@@ -33,7 +33,7 @@ function AskPageContent() {
   const [error, setError] = useState<string | null>(null)
 
   // Voice input hook
-  const { isListening, isSupported, transcript, error: voiceError, toggleListening } = useVoiceInput({
+  const { isListening, isSupported, isMounted: voiceMounted, transcript, error: voiceError, toggleListening } = useVoiceInput({
     language: selectedLang,
     onResult: useCallback((text: string) => {
       setQuery(prev => prev ? `${prev} ${text}` : text)
@@ -221,26 +221,27 @@ function AskPageContent() {
                         }
                       }}
                     />
-                    {/* Voice Input Button */}
-                    {isSupported && (
-                      <button
-                        type="button"
-                        onClick={toggleListening}
-                        className={cn(
-                          "absolute top-3 right-3 p-2 rounded-lg transition-all duration-200",
-                          isListening 
-                            ? "bg-accent text-accent-foreground animate-pulse" 
-                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                        )}
-                        aria-label={isListening ? t('voice.stopListening') : t('voice.startListening')}
-                      >
-                        {isListening ? (
-                          <MicOff className="h-5 w-5" />
-                        ) : (
-                          <Mic className="h-5 w-5" />
-                        )}
-                      </button>
-                    )}
+                    {/* Voice Input Button - always show, disable if not supported */}
+                    <button
+                      type="button"
+                      onClick={toggleListening}
+                      disabled={!voiceMounted || !isSupported}
+                      className={cn(
+                        "absolute top-3 right-3 p-2 rounded-lg transition-all duration-200",
+                        isListening 
+                          ? "bg-accent text-accent-foreground animate-pulse" 
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                        (!voiceMounted || !isSupported) && "opacity-50 cursor-not-allowed"
+                      )}
+                      aria-label={isListening ? t('voice.stopListening') : t('voice.startListening')}
+                      title={!isSupported && voiceMounted ? "Voice input not supported in this browser" : undefined}
+                    >
+                      {isListening ? (
+                        <MicOff className="h-5 w-5" />
+                      ) : (
+                        <Mic className="h-5 w-5" />
+                      )}
+                    </button>
                   </div>
                   
                   {/* Voice status indicators */}

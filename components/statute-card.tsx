@@ -48,7 +48,7 @@ function generateLegalExplanation(section: CitedSection): string {
     'Section 167': 'Governs police custody and remand procedures. Police custody cannot exceed 15 days. Total remand period cannot exceed 60 days for offenses punishable up to 10 years, or 90 days for more serious offenses.',
     
     // Labour Law
-    'Section 14': 'Under the Industrial Disputes Act, provides for conditions of service during pendency of proceedings. Employers cannot change service conditions or terminate without permission from the authority before whom proceedings are pending.',
+    'Section 14 (Industrial Disputes)': 'Under the Industrial Disputes Act, provides for conditions of service during pendency of proceedings. Employers cannot change service conditions or terminate without permission from the authority before whom proceedings are pending.',
     'Section 25F': 'Requires conditions precedent to retrenchment. The employer must: (a) give one month notice, (b) pay 15 days wages for every year of service, (c) give notice to appropriate government. Non-compliance makes retrenchment void.',
     
     // Property Law

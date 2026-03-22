@@ -2,7 +2,7 @@ import { GoogleGenerativeAI, TaskType } from '@google/generative-ai'
 import { Pinecone } from '@pinecone-database/pinecone'
 
 import { legalDocuments, type LegalDocument } from './legal-documents'
-import type { CitedSection, AuditLogEntry, LegalResponse, Language } from './types'
+import type { CitedSection, AuditLogEntry, LegalResponse, Language, LegalDomain } from './types'
 
 interface VectorMetadata {
   id: string
@@ -12,7 +12,7 @@ interface VectorMetadata {
   title: string
   snippet: string
   keywords: string
-  sourceUrl?: string
+  sourceUrl: string
 }
 
 // Use text-embedding-004 which is the latest embedding model
@@ -155,7 +155,7 @@ export async function initializePineconeIndex(): Promise<void> {
           title: doc.title,
           snippet: doc.snippet,
           keywords: doc.keywords.join(', '),
-          sourceUrl: doc.sourceUrl,
+          sourceUrl: doc.sourceUrl || '',
         },
       })
     } catch (embError) {
@@ -173,7 +173,8 @@ export async function initializePineconeIndex(): Promise<void> {
   for (let i = 0; i < vectors.length; i += batchSize) {
     const batch = vectors.slice(i, i + batchSize)
     // Pinecone v7+ requires { records: [...] } format
-    await index.namespace(NAMESPACE).upsert({ records: batch })
+    // Using type assertion since our metadata conforms to RecordMetadata requirements
+    await index.namespace(NAMESPACE).upsert(batch as any)
   }
 
   console.log(`Initialized Pinecone index with ${vectors.length} vectors`)
@@ -314,13 +315,21 @@ export async function answerLegalQueryWithGeminiPinecone(params: {
     domainScores.set(domain, (domainScores.get(domain) || 0) + result.score)
   }
 
-  let bestDomain = results[0]?.metadata?.domain || 'General'
+  // Valid legal domains that match the LegalDomain type
+  const validDomains: LegalDomain[] = ['IPC', 'RTI', 'General', 'Consumer', 'Tenancy', 'Workplace', 'Family Law', 'Police/FIR']
+  
+  let bestDomain: LegalDomain = 'General'
   let bestDomainScore = -Infinity
   for (const [domain, score] of domainScores.entries()) {
-    if (score > bestDomainScore) {
-      bestDomain = domain
+    if (score > bestDomainScore && validDomains.includes(domain as LegalDomain)) {
+      bestDomain = domain as LegalDomain
       bestDomainScore = score
     }
+  }
+  
+  // If no valid domain found, default to General
+  if (!validDomains.includes(bestDomain)) {
+    bestDomain = 'General'
   }
 
   // Get top results from the best domain

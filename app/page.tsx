@@ -29,7 +29,7 @@ export default function LandingPage() {
   const { isAuthenticated } = useAuth()
 
   // Voice input hook
-  const { isListening, isSupported, transcript, error: voiceError, toggleListening } = useVoiceInput({
+  const { isListening, isSupported, isMounted: voiceMounted, transcript, error: voiceError, toggleListening } = useVoiceInput({
     language,
     onResult: useCallback((text: string) => {
       setQuery(prev => prev ? `${prev} ${text}` : text)
@@ -196,27 +196,28 @@ export default function LandingPage() {
                           aria-describedby="search-help"
                         />
                       </div>
-                      {/* Voice Input Button */}
-                      {isSupported && (
-                        <button
-                          type="button"
-                          onClick={toggleListening}
-                          className={cn(
-                            "flex items-center justify-center mr-2 sm:mr-3 rounded-lg p-2 sm:p-3 min-w-[36px] sm:min-w-[44px] min-h-[36px] sm:min-h-[44px] transition-all duration-200",
-                            isListening 
-                              ? "bg-accent text-accent-foreground animate-pulse" 
-                              : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                          )}
-                          aria-label={isListening ? t('voice.stopListening') : t('voice.startListening')}
-                        >
-                          {isListening ? (
-                            <MicOff className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
-                          ) : (
-                            <Mic className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
-                          )}
-                        </button>
-                      )}
-                      <Button 
+                      {/* Voice Input Button - always show, disable if not supported */}
+                      <button
+                        type="button"
+                        onClick={toggleListening}
+                        disabled={!voiceMounted || !isSupported}
+                        className={cn(
+                          "flex items-center justify-center mr-2 sm:mr-3 rounded-lg p-2 sm:p-3 min-w-[36px] sm:min-w-[44px] min-h-[36px] sm:min-h-[44px] transition-all duration-200",
+                          isListening 
+                            ? "bg-accent text-accent-foreground animate-pulse" 
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                          (!voiceMounted || !isSupported) && "opacity-50 cursor-not-allowed"
+                        )}
+                        aria-label={isListening ? t('voice.stopListening') : t('voice.startListening')}
+                        title={!isSupported && voiceMounted ? "Voice input not supported in this browser" : undefined}
+                      >
+                        {isListening ? (
+                          <MicOff className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
+                        ) : (
+                          <Mic className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
+                        )}
+                      </button>
+                      <Button
                         type="submit"
                         className="mr-2 sm:mr-3 bg-accent hover:bg-accent/90 text-accent-foreground px-3 sm:px-6 py-2 sm:py-3 font-semibold rounded-lg sm:rounded-xl min-h-[36px] sm:min-h-[48px] text-sm sm:text-base shadow-lg shadow-accent/20 transition-transform hover:scale-[1.02] active:scale-[0.98]"
                       >
