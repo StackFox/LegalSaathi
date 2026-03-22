@@ -14,7 +14,7 @@ import { StatuteCard } from '@/components/statute-card'
 import { EscalationBanner } from '@/components/escalation-banner'
 import { AuditTrail } from '@/components/audit-trail'
 import { useLanguage } from '@/lib/language-context'
-import { languageOptions, topicChips } from '@/lib/mock-data'
+import { topicChips } from '@/lib/mock-data'
 import type { LegalResponse, Language as LangType } from '@/lib/types'
 
 function AskPageContent() {
@@ -150,23 +150,6 @@ function AskPageContent() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="flex-1 flex flex-col p-4 space-y-4">
-                  {/* Language Selector */}
-                  <div className="flex flex-wrap gap-2">
-                    {languageOptions.map((lang) => (
-                      <button
-                        key={lang.code}
-                        onClick={() => setSelectedLang(lang.code as LangType)}
-                        className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-                          selectedLang === lang.code
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                        }`}
-                      >
-                        {lang.nativeLabel}
-                      </button>
-                    ))}
-                  </div>
-
                   {/* Query Input */}
                   <Textarea
                     value={query}

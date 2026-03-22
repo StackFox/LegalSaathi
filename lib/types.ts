@@ -1,6 +1,6 @@
 // Legal Saathi Types
 
-export type Language = 'en' | 'hi' | 'ta' | 'te' | 'bn' | 'mr'
+export type Language = 'en' | 'hi' | 'ta' | 'te' | 'bn' | 'mr' | 'gu' | 'kn' | 'ml' | 'pa'
 
 export type LegalDomain = 
   | 'IPC' 
