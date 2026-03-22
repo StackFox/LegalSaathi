@@ -15,8 +15,21 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useState, useEffect } from 'react'
 import { useTheme } from 'next-themes'
-import { useLanguage } from '@/lib/language-context'
+import { useLanguage, type Language } from '@/lib/language-context'
 import { useAuth } from '@/lib/auth-context'
+
+const uiLanguages: { code: Language; label: string; nativeLabel: string }[] = [
+  { code: 'en', label: 'English', nativeLabel: 'English' },
+  { code: 'hi', label: 'Hindi', nativeLabel: 'हिंदी' },
+  { code: 'ta', label: 'Tamil', nativeLabel: 'தமிழ்' },
+  { code: 'te', label: 'Telugu', nativeLabel: 'తెలుగు' },
+  { code: 'bn', label: 'Bengali', nativeLabel: 'বাংলা' },
+  { code: 'mr', label: 'Marathi', nativeLabel: 'मराठी' },
+  { code: 'gu', label: 'Gujarati', nativeLabel: 'ગુજરાતી' },
+  { code: 'kn', label: 'Kannada', nativeLabel: 'ಕನ್ನಡ' },
+  { code: 'ml', label: 'Malayalam', nativeLabel: 'മലയാളം' },
+  { code: 'pa', label: 'Punjabi', nativeLabel: 'ਪੰਜਾਬੀ' },
+]
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false)
@@ -90,19 +103,18 @@ export function Header() {
                   variant="ghost"
                   size="sm"
                   className="hidden sm:flex items-center gap-1 px-2 min-h-[44px] min-w-[44px]"
-                  aria-label={`${t('accessibility.language')}: ${language === 'en' ? 'English' : 'हिंदी'}`}
+                  aria-label={`${t('accessibility.language')}: ${uiLanguages.find(l => l.code === language)?.nativeLabel || 'English'}`}
                 >
                   <Globe className="h-4 w-4" aria-hidden="true" />
                   <span className="text-xs uppercase">{language}</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setLanguage('en')}>
-                  English {language === 'en' && '✓'}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setLanguage('hi')}>
-                  हिंदी {language === 'hi' && '✓'}
-                </DropdownMenuItem>
+              <DropdownMenuContent align="end" className="max-h-80 overflow-y-auto">
+                {uiLanguages.map((lang) => (
+                  <DropdownMenuItem key={lang.code} onClick={() => setLanguage(lang.code)}>
+                    {lang.nativeLabel} ({lang.label}) {language === lang.code && '✓'}
+                  </DropdownMenuItem>
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -215,23 +227,18 @@ export function Header() {
                     <div className="space-y-4">
                       <div>
                         <p className="text-sm font-semibold text-muted-foreground mb-3">Language / भाषा</p>
-                        <div className="flex gap-2">
-                          <Button
-                            variant={language === 'en' ? 'default' : 'outline'}
-                            size="lg"
-                            onClick={() => setLanguage('en')}
-                            className="min-h-[48px] min-w-[80px] text-base"
-                          >
-                            English
-                          </Button>
-                          <Button
-                            variant={language === 'hi' ? 'default' : 'outline'}
-                            size="lg"
-                            onClick={() => setLanguage('hi')}
-                            className="min-h-[48px] min-w-[80px] text-base"
-                          >
-                            हिंदी
-                          </Button>
+                        <div className="flex flex-wrap gap-2">
+                          {uiLanguages.map((lang) => (
+                            <Button
+                              key={lang.code}
+                              variant={language === lang.code ? 'default' : 'outline'}
+                              size="sm"
+                              onClick={() => setLanguage(lang.code)}
+                              className="min-h-[40px] text-sm"
+                            >
+                              {lang.nativeLabel}
+                            </Button>
+                          ))}
                         </div>
                       </div>
                       <div>
