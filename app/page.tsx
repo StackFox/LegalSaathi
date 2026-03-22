@@ -253,27 +253,22 @@ export default function LandingPage() {
           className="relative overflow-hidden min-h-screen flex items-center bg-background" 
           aria-labelledby="hero-heading"
         >
-          {/* Background elements */}
-          <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
-            <motion.div 
-              className="absolute -right-32 top-1/4 h-96 w-96 rounded-full bg-accent/30 dark:bg-accent/20 blur-3xl"
-              animate={{ opacity: [0.3, 0.5, 0.3], scale: [1, 1.1, 1] }}
-              transition={{ duration: 5, repeat: Infinity }}
-            />
-            <motion.div 
-              className="absolute -left-32 bottom-0 h-72 w-72 rounded-full bg-purple-500/20 dark:bg-purple-600/10 blur-3xl"
-              animate={{ opacity: [0.2, 0.4, 0.2] }}
-              transition={{ duration: 7, repeat: Infinity }}
-            />
-            <motion.div 
-              className="absolute top-0 left-1/3 h-64 w-64 rounded-full bg-blue-500/15 dark:bg-blue-600/10 blur-3xl"
-              animate={{ opacity: [0.2, 0.35, 0.2] }}
-              transition={{ duration: 6, repeat: Infinity, delay: 1 }}
-            />
+          {/* Animated mesh gradient background */}
+          <div className="mesh-gradient" aria-hidden="true" />
+          
+          {/* Grid pattern overlay */}
+          <div className="grid-pattern" aria-hidden="true" />
+          
+          {/* Floating orbs */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+            <div className="orb-1 absolute top-20 right-[15%] w-72 h-72 rounded-full bg-gradient-to-br from-accent/20 to-orange-400/10 blur-3xl" />
+            <div className="orb-2 absolute bottom-20 left-[10%] w-96 h-96 rounded-full bg-gradient-to-tr from-violet-500/15 to-blue-500/10 blur-3xl" />
+            <div className="orb-3 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-gradient-to-r from-accent/5 via-transparent to-blue-500/5 blur-3xl" />
           </div>
           
           <div className="container relative mx-auto px-4 py-16 md:py-24">
-            <div className="mx-auto max-w-3xl">
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+            <div className="max-w-2xl mx-auto lg:mx-0">
               {/* Badge */}
               <motion.div 
                 className="mb-8 inline-flex items-center gap-2 rounded-full bg-muted/80 px-4 py-2 text-sm font-medium text-muted-foreground backdrop-blur-sm border border-border/50"
@@ -401,6 +396,127 @@ export default function LandingPage() {
                 ))}
               </motion.div>
             </div>
+
+            {/* Phone Mockup */}
+            <motion.div 
+              className="hidden lg:flex justify-center items-center"
+              initial={{ opacity: 0, x: 50, rotateY: -15 }}
+              animate={{ opacity: 1, x: 0, rotateY: 0 }}
+              transition={{ duration: 0.8, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+            >
+              <div className="relative">
+                {/* Phone frame */}
+                <motion.div 
+                  className="relative w-[280px] h-[580px] bg-card rounded-[3rem] p-2 phone-glow"
+                  animate={{ y: [0, -10, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  {/* Phone inner bezel */}
+                  <div className="w-full h-full bg-background rounded-[2.5rem] overflow-hidden relative">
+                    {/* Notch */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-card rounded-b-2xl z-10" />
+                    
+                    {/* Screen content */}
+                    <div className="pt-10 px-4 h-full flex flex-col">
+                      {/* Header */}
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="w-8 h-8 rounded-xl bg-accent flex items-center justify-center">
+                          <Scale className="w-4 h-4 text-accent-foreground" />
+                        </div>
+                        <span className="font-semibold text-foreground text-sm">Legal Saathi</span>
+                      </div>
+                      
+                      {/* Chat bubbles */}
+                      <div className="space-y-3 flex-1">
+                        {/* User message */}
+                        <motion.div 
+                          className="flex justify-end"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 1.2 }}
+                        >
+                          <div className="bg-accent text-accent-foreground text-xs px-3 py-2 rounded-2xl rounded-br-md max-w-[180px]">
+                            {language === 'hi' ? 'मेरा मकान मालिक किराया बढ़ा रहा है' : 'My landlord is increasing rent'}
+                          </div>
+                        </motion.div>
+                        
+                        {/* AI response */}
+                        <motion.div 
+                          className="flex justify-start"
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 1.6 }}
+                        >
+                          <div className="bg-muted text-foreground text-xs px-3 py-2 rounded-2xl rounded-bl-md max-w-[200px]">
+                            <div className="flex items-center gap-1 mb-1">
+                              <BookOpen className="w-3 h-3 text-accent" />
+                              <span className="text-[10px] text-accent font-medium">Rent Control Act</span>
+                            </div>
+                            {language === 'hi' ? 'किराया नियंत्रण अधिनियम के अनुसार...' : 'According to the Rent Control Act...'}
+                          </div>
+                        </motion.div>
+                        
+                        {/* Legal citation */}
+                        <motion.div 
+                          className="flex justify-start"
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 2 }}
+                        >
+                          <div className="bg-green-500/10 border border-green-500/20 text-foreground text-xs px-3 py-2 rounded-xl max-w-[180px]">
+                            <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                              <CheckCircle className="w-3 h-3" />
+                              <span className="text-[10px] font-medium">Section 4(1)</span>
+                            </div>
+                          </div>
+                        </motion.div>
+                      </div>
+                      
+                      {/* Input field mockup */}
+                      <motion.div 
+                        className="mb-8 flex items-center gap-2 bg-muted/50 rounded-full px-4 py-2"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 2.4 }}
+                      >
+                        <div className="flex-1 text-xs text-muted-foreground">
+                          {language === 'hi' ? 'अपना सवाल पूछें...' : 'Ask your question...'}
+                        </div>
+                        <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center">
+                          <ArrowRight className="w-3 h-3 text-accent-foreground" />
+                        </div>
+                      </motion.div>
+                    </div>
+                  </div>
+                </motion.div>
+                
+                {/* Floating elements around phone */}
+                <motion.div 
+                  className="absolute -top-4 -right-4 w-12 h-12 bg-card rounded-xl shadow-lg flex items-center justify-center"
+                  animate={{ y: [0, -8, 0], rotate: [0, 5, 0] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  <Shield className="w-6 h-6 text-green-500" />
+                </motion.div>
+                
+                <motion.div 
+                  className="absolute top-1/3 -left-6 w-10 h-10 bg-card rounded-lg shadow-lg flex items-center justify-center"
+                  animate={{ y: [0, 10, 0], rotate: [0, -5, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+                >
+                  <Globe className="w-5 h-5 text-blue-500" />
+                </motion.div>
+                
+                <motion.div 
+                  className="absolute bottom-20 -right-8 w-14 h-14 bg-card rounded-2xl shadow-lg flex items-center justify-center"
+                  animate={{ y: [0, -12, 0], rotate: [0, -3, 0] }}
+                  transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+                >
+                  <Sparkles className="w-7 h-7 text-accent" />
+                </motion.div>
+              </div>
+            </motion.div>
+            </div>
           </div>
           
           {/* Scroll indicator */}
@@ -421,9 +537,11 @@ export default function LandingPage() {
 
         {/* Features Section */}
         <section 
-          className="py-20 md:py-32 bg-muted/30" 
+          className="py-20 md:py-32 bg-gradient-to-b from-muted/50 to-background relative overflow-hidden" 
           aria-labelledby="features-heading"
         >
+          {/* Subtle background pattern */}
+          <div className="absolute inset-0 grid-pattern opacity-50" aria-hidden="true" />
           <div className="container mx-auto px-4">
             <motion.div 
               className="mx-auto max-w-3xl text-center"
@@ -446,7 +564,7 @@ export default function LandingPage() {
                 return (
                   <StaggerItem key={feature.title}>
                     <AnimatedCard 
-                      className="text-center border-0 shadow-lg bg-card/80 backdrop-blur-sm rounded-2xl p-6"
+                      className="text-center border border-border/50 shadow-xl bg-card rounded-2xl p-6 hover:shadow-2xl hover:border-accent/20"
                       hoverEffect="lift"
                     >
                       <CardHeader className="pb-2">
@@ -563,21 +681,21 @@ export default function LandingPage() {
 
         {/* Stats Section */}
         <section 
-          className="py-20 md:py-28 bg-muted/30" 
+          className="py-20 md:py-28 bg-gradient-to-t from-muted/30 to-background relative" 
           aria-label={language === 'hi' ? 'आंकड़े' : 'Statistics'}
         >
           <div className="container mx-auto px-4">
-            <StaggerContainer className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            <StaggerContainer className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {stats.map((stat) => (
                 <StaggerItem key={stat.label}>
                   <AnimatedCard 
-                    className="text-center p-6 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/50"
+                    className="text-center p-8 rounded-2xl bg-card border border-border/50 shadow-lg hover:shadow-xl hover:border-accent/30"
                     hoverEffect="lift"
                   >
-                    <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent">
+                    <div className="text-4xl sm:text-5xl font-bold text-accent">
                       {stat.value}
                     </div>
-                    <div className="mt-2 text-muted-foreground text-base font-medium">{stat.label}</div>
+                    <div className="mt-3 text-muted-foreground text-base font-medium">{stat.label}</div>
                   </AnimatedCard>
                 </StaggerItem>
               ))}
