@@ -63,13 +63,13 @@ export function Header() {
       <header className="sticky top-0 z-50 w-full border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 flex-shrink-0 group">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-lg group-hover:shadow-primary/25 transition-shadow duration-300">
-              <Scale className="h-5 w-5 text-primary-foreground" aria-hidden="true" />
+          <Link href="/" className="flex items-center gap-2 sm:gap-3 flex-shrink-0 group">
+            <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-lg group-hover:shadow-primary/25 transition-shadow duration-300">
+              <Scale className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground" aria-hidden="true" />
             </div>
-            <div className="flex-col hidden sm:flex">
-              <span className="text-lg font-bold text-foreground leading-tight">{t('header.title')}</span>
-              <span className="text-[11px] text-muted-foreground leading-tight">{t('header.subtitle')}</span>
+            <div className="flex flex-col">
+              <span className="text-sm sm:text-lg font-bold text-foreground leading-tight">{t('header.title')}</span>
+              <span className="text-[9px] sm:text-[11px] text-muted-foreground leading-tight">{t('header.subtitle')}</span>
             </div>
           </Link>
 
@@ -202,110 +202,152 @@ export function Header() {
                   <Menu className="h-5 w-5" aria-hidden="true" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-full sm:w-96">
-                <div className="space-y-4 mt-8">
-                  {navLinks.map((link) => (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      className="block py-3 text-lg text-foreground hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-ring rounded-md px-2"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      {link.label}
-                    </Link>
-                  ))}
-                  {isAuthenticated && (
-                    <Link
-                      href="/queries"
-                      className="block py-3 text-lg text-foreground hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-ring rounded-md px-2"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      {t('nav.myQueries')}
-                    </Link>
-                  )}
-                  <div className="border-t pt-4">
-                    <div className="space-y-4">
-                      <div>
-                        <p className="text-sm font-semibold text-muted-foreground mb-3">Language / भाषा</p>
-                        <div className="flex flex-wrap gap-2">
-                          {uiLanguages.map((lang) => (
-                            <Button
-                              key={lang.code}
-                              variant={language === lang.code ? 'default' : 'outline'}
-                              size="sm"
-                              onClick={() => setLanguage(lang.code)}
-                              className="min-h-[40px] text-sm"
-                            >
-                              {lang.nativeLabel}
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-muted-foreground mb-3">Font Size / फ़ॉन्ट आकार</p>
-                        <div className="flex flex-wrap gap-2">
-                          <Button
-                            variant={fontSize === 'normal' ? 'default' : 'outline'}
-                            size="lg"
-                            onClick={() => setFontSize('normal')}
-                            className="min-h-[48px] text-base"
-                          >
-                            Normal
-                          </Button>
-                          <Button
-                            variant={fontSize === 'large' ? 'default' : 'outline'}
-                            size="lg"
-                            onClick={() => setFontSize('large')}
-                            className="min-h-[48px] text-base"
-                          >
-                            Large
-                          </Button>
-                          <Button
-                            variant={fontSize === 'xlarge' ? 'default' : 'outline'}
-                            size="lg"
-                            onClick={() => setFontSize('xlarge')}
-                            className="min-h-[48px] text-base"
-                          >
-                            XL
-                          </Button>
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-muted-foreground mb-3">Theme / थीम</p>
+              <SheetContent side="right" className="w-[85vw] max-w-sm p-0 overflow-y-auto">
+                {/* Mobile Menu Header with Logo */}
+                <div className="sticky top-0 bg-card border-b border-border p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80">
+                      <Scale className="h-5 w-5 text-primary-foreground" aria-hidden="true" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-lg font-bold text-foreground leading-tight">{t('header.title')}</span>
+                      <span className="text-[11px] text-muted-foreground leading-tight">{t('header.subtitle')}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="p-4 space-y-1">
+                  {/* Navigation Links */}
+                  <div className="space-y-1">
+                    {navLinks.map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        className="flex items-center py-3 px-3 text-base font-medium text-foreground hover:bg-muted rounded-lg transition-colors"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                    {isAuthenticated && (
+                      <Link
+                        href="/queries"
+                        className="flex items-center py-3 px-3 text-base font-medium text-foreground hover:bg-muted rounded-lg transition-colors"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        {t('nav.myQueries')}
+                      </Link>
+                    )}
+                  </div>
+                  
+                  <div className="border-t border-border my-4" />
+                  
+                  {/* Language Selection */}
+                  <div className="space-y-3">
+                    <p className="text-sm font-semibold text-muted-foreground px-1">{t('accessibility.language')}</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {uiLanguages.slice(0, 6).map((lang) => (
                         <Button
-                          variant="outline"
-                          size="lg"
-                          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                          className="w-full min-h-[48px] text-base"
+                          key={lang.code}
+                          variant={language === lang.code ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setLanguage(lang.code)}
+                          className="min-h-[36px] text-xs px-2"
                         >
-                          {theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode'}
+                          {lang.nativeLabel}
+                        </Button>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      {uiLanguages.slice(6).map((lang) => (
+                        <Button
+                          key={lang.code}
+                          variant={language === lang.code ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setLanguage(lang.code)}
+                          className="min-h-[36px] text-xs px-2"
+                        >
+                          {lang.nativeLabel}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="border-t border-border my-4" />
+                  
+                  {/* Font Size & Theme Row */}
+                  <div className="flex gap-3">
+                    <div className="flex-1 space-y-2">
+                      <p className="text-sm font-semibold text-muted-foreground px-1">{t('accessibility.fontSize')}</p>
+                      <div className="flex gap-1">
+                        <Button
+                          variant={fontSize === 'normal' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setFontSize('normal')}
+                          className="flex-1 min-h-[36px] text-xs"
+                        >
+                          A
+                        </Button>
+                        <Button
+                          variant={fontSize === 'large' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setFontSize('large')}
+                          className="flex-1 min-h-[36px] text-sm"
+                        >
+                          A
+                        </Button>
+                        <Button
+                          variant={fontSize === 'xlarge' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setFontSize('xlarge')}
+                          className="flex-1 min-h-[36px] text-base font-bold"
+                        >
+                          A
                         </Button>
                       </div>
                     </div>
+                    <div className="flex-1 space-y-2">
+                      <p className="text-sm font-semibold text-muted-foreground px-1">{t('accessibility.theme')}</p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                        className="w-full min-h-[36px]"
+                      >
+                        {theme === 'dark' ? (
+                          <Sun className="h-4 w-4 mr-2" />
+                        ) : (
+                          <Moon className="h-4 w-4 mr-2" />
+                        )}
+                        {theme === 'dark' ? t('accessibility.lightMode') : t('accessibility.darkMode')}
+                      </Button>
+                    </div>
                   </div>
+                  
+                  <div className="border-t border-border my-4" />
+                  
+                  {/* Auth Buttons */}
                   {!isAuthenticated ? (
-                    <div className="border-t pt-4 space-y-3">
-                      <Button asChild variant="outline" className="w-full min-h-[52px] text-base" onClick={() => setIsOpen(false)}>
+                    <div className="space-y-2">
+                      <Button asChild variant="outline" className="w-full min-h-[44px]" onClick={() => setIsOpen(false)}>
                         <Link href="/sign-in">{t('auth.signIn')}</Link>
                       </Button>
-                      <Button asChild className="w-full bg-primary hover:bg-primary/90 min-h-[52px] text-base" onClick={() => setIsOpen(false)}>
+                      <Button asChild className="w-full bg-accent hover:bg-accent/90 text-accent-foreground min-h-[44px]" onClick={() => setIsOpen(false)}>
                         <Link href="/sign-up">{t('auth.signUp')}</Link>
                       </Button>
                     </div>
                   ) : (
-                    <div className="border-t pt-4">
-                      <Button
-                        variant="outline"
-                        className="w-full text-destructive hover:text-destructive min-h-[52px] text-base"
-                        onClick={() => {
-                          signOut()
-                          setIsOpen(false)
-                        }}
-                      >
-                        <LogOut className="h-5 w-5 mr-2" aria-hidden="true" />
-                        {t('auth.signOut')}
-                      </Button>
-                    </div>
+                    <Button
+                      variant="outline"
+                      className="w-full text-destructive hover:text-destructive min-h-[44px]"
+                      onClick={() => {
+                        signOut()
+                        setIsOpen(false)
+                      }}
+                    >
+                      <LogOut className="h-4 w-4 mr-2" aria-hidden="true" />
+                      {t('auth.signOut')}
+                    </Button>
                   )}
                 </div>
               </SheetContent>

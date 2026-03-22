@@ -127,20 +127,20 @@ function AskPageContent() {
       <Header />
       
       <main className="flex-1 bg-muted/30">
-        <div className="container mx-auto px-4 py-6">
+        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
           {/* Page Title */}
-          <div className="mb-6 text-center">
-            <h1 className="text-2xl font-bold text-foreground flex items-center justify-center gap-2">
-              <Scale className="h-6 w-6 text-primary" />
+          <div className="mb-4 sm:mb-6 text-center">
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center justify-center gap-2">
+              <Scale className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
               {t('nav.ask')}
             </h1>
-            <p className="mt-1 text-muted-foreground">
+            <p className="mt-1 text-sm sm:text-base text-muted-foreground px-2">
               {t('ask.emptyDescription')}
             </p>
           </div>
 
           {/* Main Grid - Split Layout */}
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
             
             {/* LEFT PANEL - Chat Interface */}
             <div className="space-y-4">
@@ -174,7 +174,7 @@ function AskPageContent() {
                     {isProcessing ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Processing...
+                        {t('ask.processing')}
                       </>
                     ) : (
                       <>
@@ -215,7 +215,7 @@ function AskPageContent() {
                           <Send className="h-6 w-6 text-muted-foreground" />
                         </div>
                         <p className="mt-3 text-sm text-muted-foreground">
-                          Ask any legal question in your language
+                          {t('ask.emptyPrompt')}
                         </p>
                       </div>
                     )}
@@ -226,8 +226,8 @@ function AskPageContent() {
                           <div className="h-16 w-16 rounded-full border-4 border-muted animate-pulse" />
                           <Loader2 className="absolute inset-0 m-auto h-8 w-8 text-primary animate-spin" />
                         </div>
-                        <p className="mt-4 text-sm font-medium text-foreground">Analyzing your query...</p>
-                        <p className="mt-1 text-xs text-muted-foreground">Searching legal database</p>
+                        <p className="mt-4 text-sm font-medium text-foreground">{t('ask.analyzingQuery')}...</p>
+                        <p className="mt-1 text-xs text-muted-foreground">{t('ask.searchingLegal')}</p>
                       </div>
                     )}
 
@@ -246,14 +246,14 @@ function AskPageContent() {
                             <div className="flex items-center gap-2 mb-2">
                               <LegalDomainBadge domain={response.domain} size="sm" />
                               <span className="text-xs text-muted-foreground">
-                                {response.confidence_score}% confidence
+                                {response.confidence_score}% {t('ask.confidence')}
                               </span>
                             </div>
                             <p className="text-foreground leading-relaxed">
                               {response.action_steps[0]}
                             </p>
                             <p className="mt-2 text-xs text-muted-foreground">
-                              See detailed guidance in the panel →
+                              {t('ask.seeDetailedGuidance')} →
                             </p>
                           </div>
                         </div>
@@ -275,19 +275,19 @@ function AskPageContent() {
                         <Scale className="h-12 w-12 text-primary/20" />
                         <Loader2 className="absolute inset-0 m-auto h-6 w-6 text-primary animate-spin" />
                       </div>
-                      <h3 className="text-lg font-semibold">Searching Legal Database</h3>
+                      <h3 className="text-lg font-semibold">{t('ask.searchingLegal')}</h3>
                       <div className="mt-4 space-y-2 text-sm text-muted-foreground">
                         <p className="flex items-center gap-2">
                           <CheckCircle className="h-4 w-4 text-green-500" />
-                          Analyzing your question
+                          {t('ask.analyzingQuery')}
                         </p>
                         <p className="flex items-center gap-2">
                           <Loader2 className="h-4 w-4 animate-spin" />
-                          Searching Indian legal statutes
+                          {t('ask.searchingStatutes')}
                         </p>
                         <p className="flex items-center gap-2 opacity-50">
                           <Clock className="h-4 w-4" />
-                          Generating guidance
+                          {t('ask.generatingGuidance')}
                         </p>
                       </div>
                     </div>
@@ -303,10 +303,10 @@ function AskPageContent() {
                       <BookOpen className="h-8 w-8 text-muted-foreground" />
                     </div>
                     <h3 className="mt-4 text-lg font-semibold text-foreground">
-                      Legal Guidance
+                      {t('ask.legalGuidanceTitle')}
                     </h3>
                     <p className="mt-2 max-w-sm text-muted-foreground leading-relaxed">
-                      Relevant laws, action steps, and deadlines will appear here after you submit your question.
+                      {t('ask.guidanceDescription')}
                     </p>
                   </CardContent>
                 </Card>
@@ -324,7 +324,7 @@ function AskPageContent() {
                           <div>
                             <p className="text-sm font-medium">{response.domain}</p>
                             <p className="text-xs text-muted-foreground">
-                              {response.detected_language} Query
+                              {response.detected_language} {t('ask.query')}
                             </p>
                           </div>
                         </div>
